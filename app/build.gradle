@@ -1,3 +1,7 @@
+plugins {
+    id "com.diffplug.gradle.spotless" version "3.16.0"
+}
+
 apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
@@ -19,6 +23,13 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+spotless {
+    kotlin {
+        ktlint()
+        target '**/*.kt'
     }
 }
 

@@ -1,3 +1,4 @@
+/* ktlint-disable no-wildcard-imports */
 package me.a0xcaff.forte
 
 import android.support.test.InstrumentationRegistry
