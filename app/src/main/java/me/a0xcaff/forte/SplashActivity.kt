@@ -10,9 +10,10 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         val config = Config.getConfig(this)
-        if (config.getServerUrl() == null) {
-            val intent = Intent(this, ConnectActivity::class.java)
-            startActivity(intent)
+        val redirector = LaunchRedirector(config) {
+            startActivity(Intent(this, ConnectActivity::class.java))
         }
+
+        lifecycle.addObserver(redirector)
     }
 }
