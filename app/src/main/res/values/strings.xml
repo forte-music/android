@@ -3,4 +3,5 @@
     <string name="title_activity_connect">Connect to Server</string>
     <string name="prompt_server_address">Server Address</string>
     <string name="connect_button">Connect</string>
+    <string name="loading_text">Loading…</string>
 </resources>

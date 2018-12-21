@@ -3,7 +3,7 @@ package me.a0xcaff.forte
 import android.content.Context
 import android.content.SharedPreferences
 
-const val SERVER_URL = "server_url"
+private const val SERVER_URL = "server_url"
 
 class Config(private val prefs: SharedPreferences) {
     fun getServerUrl(): String? =
