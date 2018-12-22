@@ -68,4 +68,9 @@ class ConnectActivity : AppCompatActivity() {
             viewModel.connect()
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        dialog.dismiss()
+    }
 }
