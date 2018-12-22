@@ -30,7 +30,7 @@ class ConnectActivity : AppCompatActivity() {
             binding.connectButton.isEnabled = it
         })
 
-        viewModel.error.observe(this, Observer {
+        viewModel.validationError.observe(this, Observer {
             binding.serverUrlInput.error = it
         })
 
@@ -43,6 +43,12 @@ class ConnectActivity : AppCompatActivity() {
                 dialog.hide()
             }
         })
+
+        viewModel.error.observe(this, Observer {
+            binding.errorText.text = it
+        })
+
+        dialog.setOnCancelListener { viewModel.cancelConnecting() }
 
         binding.serverUrlInput.editText?.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
