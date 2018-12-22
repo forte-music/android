@@ -5,8 +5,8 @@ import android.content.Context
 import androidx.databinding.DataBindingUtil
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -15,12 +15,14 @@ import me.a0xcaff.forte.databinding.ActivityConnectBinding
 class ConnectActivity : AppCompatActivity() {
     private lateinit var viewModel: ConnectActivityViewModel
     private lateinit var binding: ActivityConnectBinding
+    private lateinit var dialog: AlertDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         viewModel = ViewModelProviders.of(this).get(ConnectActivityViewModel::class.java)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_connect)
+        dialog = ProgressDialogBuilder(this)
 
         binding.serverUrlInput.editText?.setText(viewModel.url.value)
 
@@ -34,7 +36,12 @@ class ConnectActivity : AppCompatActivity() {
 
         viewModel.isLoading.observe(this, Observer {
             binding.serverUrlInput.editText?.isEnabled = !it
-            binding.loadingGroup.visibility = if (it) { View.VISIBLE } else { View.GONE }
+
+            if (it) {
+                dialog.show()
+            } else {
+                dialog.hide()
+            }
         })
 
         binding.serverUrlInput.editText?.addTextChangedListener(object : TextWatcher {
