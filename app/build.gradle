@@ -10,6 +10,8 @@ apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'kotlin-kapt'
 
+apply plugin: 'com.apollographql.android'
+
 android {
     compileSdkVersion 28
     defaultConfig {
@@ -51,10 +53,13 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
-    kapt 'com.android.databinding:compiler:3.1.4'
+    implementation 'com.google.android.material:material:1.1.0-alpha02'
+    implementation 'com.apollographql.apollo:apollo-runtime:1.0.0-alpha3'
 
     testImplementation 'junit:junit:4.12'
+
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
-    implementation 'com.google.android.material:material:1.1.0-alpha02'
+
+    kapt 'com.android.databinding:compiler:3.1.4'
 }

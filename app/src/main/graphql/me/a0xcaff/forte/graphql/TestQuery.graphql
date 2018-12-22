@@ -1,0 +1,9 @@
+query TestQuery {
+  songs {
+    edges {
+      node {
+        id
+      }
+    }
+  }
+}
