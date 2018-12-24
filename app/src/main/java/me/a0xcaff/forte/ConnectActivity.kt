@@ -22,7 +22,7 @@ class ConnectActivity : AppCompatActivity() {
 
         viewModel = ViewModelProviders.of(this).get(ConnectActivityViewModel::class.java)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_connect)
-        dialog = ProgressDialogBuilder(this)
+        dialog = makeProgressDialog(this)
 
         binding.serverUrlInput.editText?.setText(viewModel.url.value)
 
@@ -67,10 +67,5 @@ class ConnectActivity : AppCompatActivity() {
 
             viewModel.connect()
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        dialog.dismiss()
     }
 }
