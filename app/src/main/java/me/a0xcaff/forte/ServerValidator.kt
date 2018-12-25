@@ -12,13 +12,17 @@ sealed class ValidationResult
 object Success : ValidationResult()
 data class Failure(val message: String) : ValidationResult()
 
+interface ServerValidator {
+    suspend fun validate(url: HttpUrl): ValidationResult
+}
+
 /**
  * Validates that a server is a valid forte server. It ensures the graphql endpoint is reachable and responds to a query
  * for all songs.
  */
-class ServerValidator(private val okHttpClient: OkHttpClient) {
+class ServerValidatorImpl(private val okHttpClient: OkHttpClient) : ServerValidator {
     @UseExperimental(ObsoleteCoroutinesApi::class)
-    suspend fun validate(url: HttpUrl): ValidationResult {
+    override suspend fun validate(url: HttpUrl): ValidationResult {
         val apolloClient = ApolloClient.builder()
             .okHttpClient(okHttpClient)
             .serverUrl(url)

@@ -3,10 +3,20 @@ package me.a0xcaff.forte.ui.connect
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import me.a0xcaff.forte.Failure
+import me.a0xcaff.forte.ServerValidator
+import me.a0xcaff.forte.Success
+import me.a0xcaff.forte.ValidationResult
+import okhttp3.HttpUrl
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Rule
+
+class TestServerValidator(val fn: suspend () -> ValidationResult) : ServerValidator {
+    override suspend fun validate(url: HttpUrl) = fn.invoke()
+}
 
 class ConnectActivityViewModelTest {
     @get:Rule
@@ -14,7 +24,7 @@ class ConnectActivityViewModelTest {
 
     @Test
     fun `initial state`() {
-        val viewModel = ConnectActivityViewModel()
+        val viewModel = ConnectActivityViewModel(serverValidator = TestServerValidator { Success })
 
         with(viewModel) {
             assertEquals(url.value, "")
@@ -27,7 +37,7 @@ class ConnectActivityViewModelTest {
 
     @Test
     fun `invalid url`() {
-        val viewModel = ConnectActivityViewModel()
+        val viewModel = ConnectActivityViewModel(serverValidator = TestServerValidator { Success })
         viewModel.urlChanged("this is an invalid url")
 
         with(viewModel) {
@@ -41,7 +51,9 @@ class ConnectActivityViewModelTest {
 
     @Test
     fun `valid url without service`() {
-        val viewModel = ConnectActivityViewModel(GlobalScope.coroutineContext)
+        val viewModel = ConnectActivityViewModel(
+            GlobalScope.coroutineContext,
+            serverValidator = TestServerValidator { Failure("this is an invalid endpoint") })
         viewModel.urlChanged("http://example.com")
         val job = viewModel.connect()
 
@@ -60,14 +72,17 @@ class ConnectActivityViewModelTest {
             assertEquals(url.value, "http://example.com")
             assertEquals(isLoading.value, false)
             assertEquals(canConnect.value, true)
-            assertNotEquals(error.value, "")
+            assertEquals(error.value, "this is an invalid endpoint")
             assertEquals(validationError.value, null)
         }
     }
 
     @Test
     fun `cancel invalid request`() {
-        val viewModel = ConnectActivityViewModel(GlobalScope.coroutineContext)
+        val viewModel = ConnectActivityViewModel(GlobalScope.coroutineContext, serverValidator = TestServerValidator {
+            delay(1)
+            Failure("something went wrong, but we cancelled first")
+        })
         viewModel.urlChanged("http://example.com")
         viewModel.connect()
 
@@ -79,6 +94,27 @@ class ConnectActivityViewModelTest {
         }
 
         viewModel.cancelConnecting()
+
+        with(viewModel) {
+            assertEquals(url.value, "http://example.com")
+            assertEquals(isLoading.value, false)
+            assertEquals(canConnect.value, true)
+            assertEquals(error.value, "")
+            assertEquals(validationError.value, null)
+        }
+    }
+
+    @Test
+    fun `valid request`() {
+        val viewModel =
+            ConnectActivityViewModel(GlobalScope.coroutineContext, serverValidator = TestServerValidator { Success })
+
+        viewModel.urlChanged("http://example.com")
+        val job = viewModel.connect()
+
+        runBlocking {
+            job.join()
+        }
 
         with(viewModel) {
             assertEquals(url.value, "http://example.com")

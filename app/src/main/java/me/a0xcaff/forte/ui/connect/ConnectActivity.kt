@@ -9,20 +9,19 @@ import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityConnectBinding
 import me.a0xcaff.forte.ui.makeProgressDialog
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ConnectActivity : AppCompatActivity() {
-    private lateinit var viewModel: ConnectActivityViewModel
+    val viewModel: ConnectActivityViewModel by viewModel()
     private lateinit var binding: ActivityConnectBinding
     private lateinit var dialog: AlertDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = ViewModelProviders.of(this).get(ConnectActivityViewModel::class.java)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_connect)
         dialog = makeProgressDialog(this)
 

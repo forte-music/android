@@ -7,14 +7,12 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.*
 import me.a0xcaff.forte.*
 import okhttp3.HttpUrl
-import okhttp3.OkHttpClient
 import kotlin.coroutines.CoroutineContext
 
 class ConnectActivityViewModel(
-    private val parentContext: CoroutineContext = Dispatchers.Main
+    private val parentContext: CoroutineContext = Dispatchers.Main,
+    private val serverValidator: ServerValidator
 ) : ViewModel(), CoroutineScope {
-    private val serverValidator = ServerValidator(OkHttpClient())
-
     private val scopeJob = Job()
 
     override val coroutineContext: CoroutineContext
