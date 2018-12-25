@@ -1,10 +1,11 @@
-package me.a0xcaff.forte
+package me.a0xcaff.forte.ui
 
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import me.a0xcaff.forte.R
 
 fun makeProgressDialog(activity: AppCompatActivity): AlertDialog {
     val dialog = AlertDialog.Builder(activity).apply {

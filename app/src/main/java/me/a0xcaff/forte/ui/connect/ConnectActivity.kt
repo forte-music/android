@@ -1,4 +1,4 @@
-package me.a0xcaff.forte
+package me.a0xcaff.forte.ui.connect
 
 import android.os.Bundle
 import android.content.Context
@@ -10,7 +10,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityConnectBinding
+import me.a0xcaff.forte.ui.makeProgressDialog
 
 class ConnectActivity : AppCompatActivity() {
     private lateinit var viewModel: ConnectActivityViewModel

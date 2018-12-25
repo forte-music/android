@@ -1,4 +1,4 @@
-package me.a0xcaff.forte
+package me.a0xcaff.forte.ui.connect
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -8,6 +8,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import me.a0xcaff.forte.default
+import me.a0xcaff.forte.executeAsync
 import me.a0xcaff.forte.graphql.TestQuery
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient

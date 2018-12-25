@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".SplashActivity"
+            android:name="me.a0xcaff.forte.ui.splash.SplashActivity"
             android:theme="@style/NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,7 +24,7 @@
         </activity>
         <activity
             android:theme="@style/NoActionBar"
-            android:name=".ConnectActivity"></activity>
+            android:name=".ui.connect.ConnectActivity"></activity>
     </application>
 
 </manifest>

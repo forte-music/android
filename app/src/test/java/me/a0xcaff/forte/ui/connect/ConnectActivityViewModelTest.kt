@@ -1,5 +1,5 @@
 /* ktlint-disable no-wildcard-imports */
-package me.a0xcaff.forte
+package me.a0xcaff.forte.ui.connect
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import kotlinx.coroutines.GlobalScope

@@ -9,7 +9,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:context=".ConnectActivity">
+            tools:context=".ui.connect.ConnectActivity">
 
             <TextView
                 android:id="@+id/logo"
