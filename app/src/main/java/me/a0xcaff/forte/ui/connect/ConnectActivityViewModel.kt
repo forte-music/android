@@ -1,13 +1,13 @@
+/* ktlint-disable no-wildcard-imports */
 package me.a0xcaff.forte.ui.connect
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.apollographql.apollo.ApolloClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.firstOrNull
 import me.a0xcaff.forte.default
 import me.a0xcaff.forte.executeAsync
 import me.a0xcaff.forte.graphql.TestQuery
@@ -33,7 +33,7 @@ class ConnectActivityViewModel(
 
     private val _error = MutableLiveData<String>().default("")
 
-    private var connectingJob: Job? = null
+    private var responseChannel: ReceiveChannel<Any>? = null
 
     val url: LiveData<String> get() = _url
 
@@ -77,6 +77,7 @@ class ConnectActivityViewModel(
         _error.value = error
     }
 
+    @ObsoleteCoroutinesApi
     fun connect(): Job {
         startConnect()
 
@@ -88,35 +89,32 @@ class ConnectActivityViewModel(
             .build()
 
         val query = TestQuery.builder().build()
+        val respChan = apolloClient.query(query).executeAsync()
+        responseChannel = respChan
 
-        connectingJob = launch {
+        return launch {
             try {
-                val response = apolloClient.query(query).executeAsync()
-                launch(coroutineContext) {
-                    finishConnect()
+                val resp = respChan.firstOrNull() ?: return@launch
 
-                    if (response.hasErrors()) {
-                        val message =
-                            response.errors().joinToString(separator = "\n", transform = { it.message() ?: "" })
-                        failedConnect(message)
-                    }
+                if (resp.hasErrors()) {
+                    val message =
+                        resp.errors().joinToString(separator = "\n", transform = { it.message() ?: "" })
+                    failedConnect(message)
                 }
 
                 // TODO: Happy Path
             } catch (e: Exception) {
-                launch(coroutineContext) {
-                    finishConnect()
-                    failedConnect(e.message ?: "")
-                }
+                failedConnect(e.message ?: "")
+            } finally {
+                finishConnect()
+                respChan.cancel()
             }
         }
-
-        return connectingJob!!
     }
 
     fun cancelConnecting() {
-        connectingJob?.cancel()
-        connectingJob = null
+        responseChannel?.cancel()
+        responseChannel = null
         finishConnect()
     }
 

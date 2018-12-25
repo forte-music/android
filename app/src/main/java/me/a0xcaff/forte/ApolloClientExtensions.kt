@@ -3,30 +3,27 @@ package me.a0xcaff.forte
 import com.apollographql.apollo.ApolloCall
 import com.apollographql.apollo.api.Response
 import com.apollographql.apollo.exception.ApolloException
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.sendBlocking
 
-suspend fun <T> ApolloCall<T>.executeAsync(): Response<T> = suspendCancellableCoroutine { continuation ->
+@UseExperimental(ExperimentalCoroutinesApi::class)
+fun <T> ApolloCall<T>.executeAsync(): ReceiveChannel<Response<T>> {
+    val channel = Channel<Response<T>>()
     enqueue(object : ApolloCall.Callback<T>() {
         override fun onFailure(e: ApolloException) {
-            // Don't bother with resuming the continuation if it is already cancelled.
-            if (continuation.isCancelled) return
-            continuation.resumeWithException(e)
+            channel.close(e)
         }
 
         override fun onResponse(response: Response<T>) {
-            continuation.resume(response)
+            channel.sendBlocking(response)
         }
     })
 
-    continuation.invokeOnCancellation {
-        if (continuation.isCancelled) {
-            try {
-                cancel()
-            } catch (ex: Throwable) {
-                //Ignore cancel exception
-            }
-        }
+    channel.invokeOnClose {
+        this.cancel()
     }
+
+    return channel
 }

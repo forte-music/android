@@ -31,6 +31,12 @@ android {
     dataBinding {
         enabled true
     }
+
+    kotlinOptions {
+        freeCompilerArgs = [
+                "-Xuse-experimental=kotlin.Experimental"
+        ]
+    }
 }
 
 spotless {
