@@ -4,15 +4,23 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.apollographql.apollo.ApolloClient
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import me.a0xcaff.forte.graphql.TestQuery
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import kotlin.coroutines.CoroutineContext
 
-class ConnectActivityViewModel : ViewModel() {
+class ConnectActivityViewModel(
+    private val parentContext: CoroutineContext = Dispatchers.Main
+) : ViewModel(), CoroutineScope {
+    private val scopeJob = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = parentContext + scopeJob
+
     private val _url = MutableLiveData<String>().default("")
 
     private val _validationError = MutableLiveData<String?>().default(null)
@@ -67,7 +75,7 @@ class ConnectActivityViewModel : ViewModel() {
         _error.value = error
     }
 
-    fun connect() {
+    fun connect(): Job {
         startConnect()
 
         val okHttpClient = OkHttpClient.Builder().build()
@@ -79,26 +87,29 @@ class ConnectActivityViewModel : ViewModel() {
 
         val query = TestQuery.builder().build()
 
-        connectingJob = GlobalScope.launch {
+        connectingJob = launch {
             try {
                 val response = apolloClient.query(query).executeAsync()
-                launch(Dispatchers.Main) {
+                launch(coroutineContext) {
                     finishConnect()
 
                     if (response.hasErrors()) {
-                        val message = response.errors().joinToString(separator = "\n", transform = { it.message() ?: "" })
+                        val message =
+                            response.errors().joinToString(separator = "\n", transform = { it.message() ?: "" })
                         failedConnect(message)
                     }
                 }
 
                 // TODO: Happy Path
             } catch (e: Exception) {
-                launch(Dispatchers.Main) {
+                launch(coroutineContext) {
                     finishConnect()
                     failedConnect(e.message ?: "")
                 }
             }
         }
+
+        return connectingJob!!
     }
 
     fun cancelConnecting() {
@@ -109,5 +120,6 @@ class ConnectActivityViewModel : ViewModel() {
 
     override fun onCleared() {
         cancelConnecting()
+        scopeJob.cancel()
     }
 }
