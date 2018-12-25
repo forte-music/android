@@ -10,7 +10,7 @@ internal class LaunchRedirector(
 ) : LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun create() {
-        if (config.getServerUrl() == null) {
+        if (config.serverUrl == null) {
             onConnect()
         }
     }
