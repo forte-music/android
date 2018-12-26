@@ -30,6 +30,8 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
 
     private val upstreamFactory: OkHttpDataSourceFactory by inject()
 
+    private var notification: Notification? = null
+
     override fun onCreate() {
         super.onCreate()
         mediaSession = MediaSessionCompat(this, "ForteMediaPlaybackService")
@@ -43,6 +45,25 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
 
         player.prepare(mediaSource)
         player.playWhenReady = true
+        player.addListener(object : Player.EventListener {
+            var isForeground = true
+
+            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                val isPaused = playbackState == Player.STATE_READY && !playWhenReady
+                val isEnded = playbackState == Player.STATE_ENDED
+
+                when {
+                    isPaused || isEnded -> {
+                        stopForeground(false)
+                        isForeground = false
+                    }
+                    !isForeground && notification != null -> {
+                        startForeground(NOW_PLAYING_NOTIFICATION_ID, notification)
+                        isForeground = true
+                    }
+                }
+            }
+        })
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
             this, NOW_PLAYING_CHANNEL_ID, R.string.playback_notification_channel_name, NOW_PLAYING_NOTIFICATION_ID,
@@ -74,10 +95,15 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
             }
 
             override fun onNotificationStarted(notificationId: Int, notification: Notification?) {
+                this@MediaPlaybackService.notification = notification
                 startForeground(notificationId, notification)
             }
         })
         playerNotificationManager.setMediaSessionToken(mediaSession.sessionToken)
+        playerNotificationManager.setFastForwardIncrementMs(0)
+        playerNotificationManager.setRewindIncrementMs(0)
+        playerNotificationManager.setStopAction(null)
+        playerNotificationManager.setOngoing(false)
 
         playerNotificationManager.setPlayer(player)
 
