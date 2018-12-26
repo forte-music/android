@@ -2,6 +2,7 @@ package me.a0xcaff.forte.ui.connect
 
 import android.os.Bundle
 import android.content.Context
+import android.content.Intent
 import androidx.databinding.DataBindingUtil
 import android.text.Editable
 import android.text.TextWatcher
@@ -9,6 +10,8 @@ import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import com.google.android.exoplayer2.util.Util
+import me.a0xcaff.forte.MediaPlaybackService
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityConnectBinding
 import me.a0xcaff.forte.ui.makeProgressDialog
@@ -24,6 +27,9 @@ class ConnectActivity : AppCompatActivity() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_connect)
         dialog = makeProgressDialog(this)
+
+        val intent = Intent(this, MediaPlaybackService::class.java)
+        Util.startForegroundService(this, intent)
 
         binding.serverUrlInput.editText?.setText(viewModel.url.value)
 

@@ -1,5 +1,6 @@
 package me.a0xcaff.forte.di
 
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import me.a0xcaff.forte.Config
 import me.a0xcaff.forte.ServerValidator
 import me.a0xcaff.forte.ServerValidatorImpl
@@ -14,4 +15,5 @@ val Module = module {
     single { ServerValidatorImpl(get()) as ServerValidator }
     viewModel { ConnectActivityViewModel(serverValidator = get()) }
     single { Config.getConfig(androidContext()) }
+    factory { OkHttpDataSourceFactory(get<OkHttpClient>(), "Forte Music Android") }
 }
