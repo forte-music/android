@@ -4,4 +4,6 @@
     <string name="prompt_server_address">Server Address</string>
     <string name="connect_button">Connect</string>
     <string name="loading_text">Loading…</string>
+    <string name="playback_notification_channel_name">Playback</string>
+    <string name="playback_notification_channel_description">Playback notifications.</string>
 </resources>

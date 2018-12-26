@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="me.a0xcaff.forte">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -12,7 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <activity
             android:name="me.a0xcaff.forte.ui.splash.SplashActivity"
@@ -24,8 +26,31 @@
             </intent-filter>
         </activity>
         <activity
-            android:theme="@style/NoActionBar"
-            android:name=".ui.connect.ConnectActivity" />
-    </application>
+            android:name=".ui.connect.ConnectActivity"
+            android:theme="@style/NoActionBar" />
 
+        <service
+            android:name=".MediaPlaybackService"
+            android:enabled="true"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
+        <!--
+            MediaSession, prior to API 21, uses a broadcast receiver to communicate with a
+            media session. It does not have to be this broadcast receiver, but it must
+            handle the action "android.intent.action.MEDIA_BUTTON".
+
+            Additionally, this is used to resume the service from an inactive state upon
+            receiving a media button event (such as "play").
+        -->
+        <receiver android:name="androidx.media.session.MediaButtonReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+    </application>
 </manifest>
