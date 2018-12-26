@@ -37,33 +37,33 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
         mediaSession = MediaSessionCompat(this, "ForteMediaPlaybackService")
         mediaSession.isActive = true
 
-        player = ExoPlayerFactory.newSimpleInstance(this)
+        player = ExoPlayerFactory.newSimpleInstance(this).apply {
+            val mediaSourceFactory = ExtractorMediaSource.Factory(upstreamFactory)
+            val mediaSource =
+                mediaSourceFactory.createMediaSource(Uri.parse("http://10.0.2.2:3000/files/music/00000000000000000000000000000001/raw"))
 
-        val mediaSourceFactory = ExtractorMediaSource.Factory(upstreamFactory)
-        val mediaSource =
-            mediaSourceFactory.createMediaSource(Uri.parse("http://10.0.2.2:3000/files/music/00000000000000000000000000000001/raw"))
+            prepare(mediaSource)
+            playWhenReady = true
+            addListener(object : Player.EventListener {
+                var isForeground = true
 
-        player.prepare(mediaSource)
-        player.playWhenReady = true
-        player.addListener(object : Player.EventListener {
-            var isForeground = true
+                override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                    val isPaused = playbackState == Player.STATE_READY && !playWhenReady
+                    val isEnded = playbackState == Player.STATE_ENDED
 
-            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                val isPaused = playbackState == Player.STATE_READY && !playWhenReady
-                val isEnded = playbackState == Player.STATE_ENDED
-
-                when {
-                    isPaused || isEnded -> {
-                        stopForeground(false)
-                        isForeground = false
-                    }
-                    !isForeground && notification != null -> {
-                        startForeground(NOW_PLAYING_NOTIFICATION_ID, notification)
-                        isForeground = true
+                    when {
+                        isForeground && (isPaused || isEnded) -> {
+                            stopForeground(false)
+                            isForeground = false
+                        }
+                        !isForeground && notification != null -> {
+                            startForeground(NOW_PLAYING_NOTIFICATION_ID, notification)
+                            isForeground = true
+                        }
                     }
                 }
-            }
-        })
+            })
+        }
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
             this, NOW_PLAYING_CHANNEL_ID, R.string.playback_notification_channel_name, NOW_PLAYING_NOTIFICATION_ID,
@@ -87,25 +87,26 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
                     callback: PlayerNotificationManager.BitmapCallback?
                 ): Bitmap? = null
             }
-        )
+        ).apply {
+            setNotificationListener(object : PlayerNotificationManager.NotificationListener {
+                override fun onNotificationCancelled(notificationId: Int) {
+                    stopSelf()
+                }
 
-        playerNotificationManager.setNotificationListener(object : PlayerNotificationManager.NotificationListener {
-            override fun onNotificationCancelled(notificationId: Int) {
-                stopSelf()
-            }
+                override fun onNotificationStarted(notificationId: Int, notification: Notification?) {
+                    this@MediaPlaybackService.notification = notification
+                    startForeground(notificationId, notification)
+                }
+            })
 
-            override fun onNotificationStarted(notificationId: Int, notification: Notification?) {
-                this@MediaPlaybackService.notification = notification
-                startForeground(notificationId, notification)
-            }
-        })
-        playerNotificationManager.setMediaSessionToken(mediaSession.sessionToken)
-        playerNotificationManager.setFastForwardIncrementMs(0)
-        playerNotificationManager.setRewindIncrementMs(0)
-        playerNotificationManager.setStopAction(null)
-        playerNotificationManager.setOngoing(false)
+            setMediaSessionToken(mediaSession.sessionToken)
+            setFastForwardIncrementMs(0)
+            setRewindIncrementMs(0)
+            setStopAction(null)
+            setOngoing(false)
 
-        playerNotificationManager.setPlayer(player)
+            setPlayer(player)
+        }
 
         sessionToken = mediaSession.sessionToken
     }
