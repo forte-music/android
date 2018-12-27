@@ -57,7 +57,10 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
                             isForeground = false
                         }
                         !isForeground && notification != null -> {
-                            startService(Intent(applicationContext, MediaPlaybackService::class.java))
+                            Util.startForegroundService(
+                                this@MediaPlaybackService,
+                                Intent(applicationContext, MediaPlaybackService::class.java)
+                            )
                             startForeground(NOW_PLAYING_NOTIFICATION_ID, notification)
                             isForeground = true
                         }
