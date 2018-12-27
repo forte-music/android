@@ -31,6 +31,8 @@
             android:name=".ui.connect.ConnectActivity"
             android:theme="@style/NoActionBar" />
 
+        <activity android:name=".ui.view.ViewActivity" />
+
         <service android:name=".MediaPlaybackService" />
 
         <!--

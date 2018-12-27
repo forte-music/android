@@ -1,20 +1,20 @@
 package me.a0xcaff.forte.ui.connect
 
-import android.os.Bundle
 import android.content.Context
 import android.content.Intent
-import androidx.databinding.DataBindingUtil
+import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import com.google.android.exoplayer2.util.Util
-import me.a0xcaff.forte.MediaPlaybackService
+import me.a0xcaff.forte.EventObserver
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityConnectBinding
 import me.a0xcaff.forte.ui.makeProgressDialog
+import me.a0xcaff.forte.ui.view.ViewActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ConnectActivity : AppCompatActivity() {
@@ -27,9 +27,6 @@ class ConnectActivity : AppCompatActivity() {
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_connect)
         dialog = makeProgressDialog(this)
-
-        val intent = Intent(this, MediaPlaybackService::class.java)
-        Util.startForegroundService(this, intent)
 
         binding.serverUrlInput.editText?.setText(viewModel.url.value)
 
@@ -53,6 +50,11 @@ class ConnectActivity : AppCompatActivity() {
 
         viewModel.error.observe(this, Observer {
             binding.errorText.text = it
+        })
+
+        viewModel.sucessfulUrlFound.observe(this, EventObserver {
+            startActivity(Intent(this, ViewActivity::class.java))
+            finish()
         })
 
         dialog.setOnCancelListener { viewModel.cancelConnecting() }

@@ -4,14 +4,18 @@ package me.a0xcaff.forte.ui.connect
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import me.a0xcaff.forte.*
 import okhttp3.HttpUrl
 import kotlin.coroutines.CoroutineContext
 
 class ConnectActivityViewModel(
     private val parentContext: CoroutineContext = Dispatchers.Main,
-    private val serverValidator: ServerValidator
+    private val serverValidator: ServerValidator,
+    private val config: Config
 ) : ViewModel(), CoroutineScope {
     private val scopeJob = Job()
 
@@ -28,6 +32,8 @@ class ConnectActivityViewModel(
 
     private val _error = MutableLiveData<String>().default("")
 
+    private val _successfulUrlFound = MutableLiveData<Event<Unit>>()
+
     private var responseJob: Job? = null
 
     val url: LiveData<String> get() = _url
@@ -41,6 +47,8 @@ class ConnectActivityViewModel(
     val error: LiveData<String> get() = _error
 
     private val httpUrl get() = HttpUrl.parse(url.value!!)
+
+    val sucessfulUrlFound: LiveData<Event<Unit>> get() = _successfulUrlFound
 
     fun urlChanged(newValue: String) {
         _error.value = ""
@@ -83,7 +91,8 @@ class ConnectActivityViewModel(
                     failedConnect(result.message)
                 }
                 is Success -> {
-                    // TODO: Happy Path
+                    config.serverUrl = httpUrl
+                    _successfulUrlFound.value = Event(Unit)
                 }
             }
             finishConnect()

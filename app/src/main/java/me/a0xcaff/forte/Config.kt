@@ -6,8 +6,12 @@ import okhttp3.HttpUrl
 
 private const val SERVER_URL = "server_url"
 
-class Config(private val prefs: SharedPreferences) {
+interface Config {
     var serverUrl: HttpUrl?
+}
+
+class ConfigImpl(private val prefs: SharedPreferences) : Config {
+    override var serverUrl: HttpUrl?
         get() {
             val raw = prefs.getString(SERVER_URL, null) ?: return null
             return HttpUrl.parse(raw)!!
@@ -20,7 +24,7 @@ class Config(private val prefs: SharedPreferences) {
         }
 
     companion object {
-        fun getConfig(ctx: Context): Config =
-            Config(ctx.getSharedPreferences("prefs", Context.MODE_PRIVATE))
+        fun from(ctx: Context): ConfigImpl =
+            ConfigImpl(ctx.getSharedPreferences("prefs", Context.MODE_PRIVATE))
     }
 }
