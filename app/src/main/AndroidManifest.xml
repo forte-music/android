@@ -26,19 +26,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.connect.ConnectActivity"
             android:theme="@style/NoActionBar" />
 
-        <service
-            android:name=".MediaPlaybackService"
-            android:enabled="true"
-            android:exported="true"
-            tools:ignore="ExportedService">
-            <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService" />
-            </intent-filter>
-        </service>
+        <service android:name=".MediaPlaybackService" />
 
         <!--
             MediaSession, prior to API 21, uses a broadcast receiver to communicate with a

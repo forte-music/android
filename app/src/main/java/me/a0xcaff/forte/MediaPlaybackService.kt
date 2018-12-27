@@ -2,26 +2,33 @@ package me.a0xcaff.forte
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Bundle
-import android.support.v4.media.MediaBrowserCompat
+import android.os.IBinder
+import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
-import androidx.media.MediaBrowserServiceCompat
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
+import com.google.android.exoplayer2.util.Util
 import me.a0xcaff.forte.ui.connect.ConnectActivity
 import org.koin.android.ext.android.inject
 
 const val NOW_PLAYING_NOTIFICATION_ID = 0xcaff
 const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
 
-class MediaPlaybackService : MediaBrowserServiceCompat() {
+/**
+ * Service responsible for playing audio and keeping the notification up to date.
+ */
+class MediaPlaybackService : Service() {
+    private lateinit var binder: Binder
+
     private lateinit var mediaSession: MediaSessionCompat
 
     private lateinit var playerNotificationManager: PlayerNotificationManager
@@ -112,17 +119,7 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
             setPlayer(player)
         }
 
-        sessionToken = mediaSession.sessionToken
-    }
-
-    override fun onGetRoot(clientPackageName: String, clientUid: Int, rootHints: Bundle?): BrowserRoot? =
-        BrowserRoot(
-            getString(R.string.app_name),
-            null
-        )
-
-    override fun onLoadChildren(parentId: String, result: Result<MutableList<MediaBrowserCompat.MediaItem>>) {
-        result.sendResult(null)
+        binder = Binder(applicationContext, mediaSession)
     }
 
     override fun onDestroy() {
@@ -130,5 +127,21 @@ class MediaPlaybackService : MediaBrowserServiceCompat() {
         mediaSession.release()
         playerNotificationManager.setPlayer(null)
         player.release()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = binder
+
+    // TODO: Handle Audio Focus
+    // TODO: Handle Error
+    // TODO: Handle Queue
+
+    /**
+     * Interface of [MediaPlaybackService] exposed to the rest of the application.
+     */
+    class Binder(applicationContext: Context, val mediaSession: MediaSessionCompat) : android.os.Binder() {
+        /**
+         * Provides access to the current playback state and provides controls for updating the playback state.
+         */
+        val mediaController: MediaControllerCompat = MediaControllerCompat(applicationContext, mediaSession)
     }
 }
