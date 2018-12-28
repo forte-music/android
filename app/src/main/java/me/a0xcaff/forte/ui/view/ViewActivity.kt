@@ -1,29 +1,56 @@
 package me.a0xcaff.forte.ui.view
 
-import android.content.Intent
 import android.os.Bundle
+import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import com.google.android.exoplayer2.util.Util
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.Config
-import me.a0xcaff.forte.MediaPlaybackService
+import me.a0xcaff.forte.MediaPlaybackServiceConnection
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
-import org.koin.android.ext.android.get
+import org.koin.android.ext.android.inject
 
 class ViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityViewBinding
 
+    private lateinit var connection: MediaPlaybackServiceConnection
+
+    private val config: Config by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = DataBindingUtil.setContentView(this, R.layout.activity_view)
+        connection = MediaPlaybackServiceConnection(this) { lifecycle ->
+            binding.playPause.setOnClickListener {
+                if (binding.playPause.isPlaying) {
+                    lifecycle.service.mediaController.transportControls.pause()
+                } else {
+                    lifecycle.service.mediaController.transportControls.play()
+                }
+            }
+            lifecycle.registerOnUnbind {
+                binding.playPause.setOnClickListener(null)
+            }
 
-        val config = get<Config>()
+            updatePlaybackState(lifecycle.service.mediaController.playbackState)
+            val callback =
+                object : MediaControllerCompat.Callback() {
+                    override fun onPlaybackStateChanged(state: PlaybackStateCompat) {
+                        updatePlaybackState(state)
+                    }
+                }
+
+            lifecycle.service.mediaController.registerCallback(callback)
+            lifecycle.registerOnUnbind {
+                lifecycle.service.mediaController.unregisterCallback(callback)
+            }
+        }
+
         binding.serverUrl.text = config.serverUrl.toString()
-
-        Util.startForegroundService(this, Intent(this, MediaPlaybackService::class.java))
 
         val bottomSheetBehavior = BottomSheetBehavior.from(binding.sheet)
         val peek = binding.sheetPeek
@@ -57,5 +84,25 @@ class ViewActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    fun updatePlaybackState(state: PlaybackStateCompat) {
+        if (state.state == PlaybackStateCompat.STATE_PLAYING) {
+            binding.playPause.isPlaying = true
+        }
+
+        if (state.state == PlaybackStateCompat.STATE_PAUSED) {
+            binding.playPause.isPlaying = false
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        connection.bind()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        connection.tryUnbind()
     }
 }
