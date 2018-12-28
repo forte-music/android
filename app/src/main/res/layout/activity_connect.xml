@@ -27,7 +27,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/serverUrlInput"
+                android:id="@+id/server_url_input"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:hint="@string/prompt_server_address"
@@ -46,7 +46,7 @@
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/connectButton"
+                android:id="@+id/connect_button"
                 android:text="@string/connect_button"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -55,7 +55,7 @@
                 android:layout_marginStart="24dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/serverUrlInput" />
+                app:layout_constraintTop_toBottomOf="@+id/server_url_input" />
 
             <TextView
                 android:id="@+id/errorText"
@@ -70,7 +70,7 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/connectButton"
+                app:layout_constraintTop_toBottomOf="@+id/connect_button"
                 app:layout_constraintVertical_bias="0.0"
                 tools:text="HTTP Error: 404" />
 

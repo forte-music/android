@@ -134,6 +134,7 @@ class MediaPlaybackService : Service() {
     // TODO: Handle Audio Focus
     // TODO: Handle Error
     // TODO: Handle Queue
+    // TODO: Wakelocks
 
     /**
      * Interface of [MediaPlaybackService] exposed to the rest of the application.

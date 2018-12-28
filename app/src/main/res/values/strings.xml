@@ -6,4 +6,5 @@
     <string name="loading_text">Loading…</string>
     <string name="playback_notification_channel_name">Playback</string>
     <string name="playback_notification_channel_description">Playback notifications.</string>
+    <string name="play_pause_content">Play / Pause</string>
 </resources>
