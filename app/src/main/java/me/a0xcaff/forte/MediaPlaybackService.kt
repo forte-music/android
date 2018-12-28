@@ -10,9 +10,11 @@ import android.net.Uri
 import android.os.IBinder
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
@@ -39,6 +41,11 @@ class MediaPlaybackService : Service() {
 
     private var notification: Notification? = null
 
+    private val audioAttributes = AudioAttributes.Builder()
+        .setUsage(C.USAGE_MEDIA)
+        .setContentType(C.CONTENT_TYPE_MUSIC)
+        .build()
+
     override fun onCreate() {
         super.onCreate()
         mediaSession = MediaSessionCompat(this, "ForteMediaPlaybackService")
@@ -47,7 +54,7 @@ class MediaPlaybackService : Service() {
         player = ExoPlayerFactory.newSimpleInstance(this).apply {
             val mediaSourceFactory = ExtractorMediaSource.Factory(upstreamFactory)
             val mediaSource =
-                mediaSourceFactory.createMediaSource(Uri.parse("http://10.0.2.2:3000/files/music/00000000000000000000000000000001/raw"))
+                mediaSourceFactory.createMediaSource(Uri.parse("http://192.168.1.160:3000/files/music/00000000000000000000000000000001/raw"))
 
             prepare(mediaSource)
             playWhenReady = true
@@ -74,6 +81,8 @@ class MediaPlaybackService : Service() {
                     }
                 }
             })
+
+            setAudioAttributes(this@MediaPlaybackService.audioAttributes, true)
         }
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
@@ -131,7 +140,6 @@ class MediaPlaybackService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = binder
 
-    // TODO: Handle Audio Focus
     // TODO: Handle Error
     // TODO: Handle Queue
     // TODO: Wakelocks
