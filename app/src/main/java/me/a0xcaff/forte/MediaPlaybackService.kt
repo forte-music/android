@@ -3,7 +3,6 @@ package me.a0xcaff.forte
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -15,6 +14,7 @@ import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
+import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
@@ -36,6 +36,8 @@ class MediaPlaybackService : Service() {
     private lateinit var playerNotificationManager: PlayerNotificationManager
 
     private lateinit var player: SimpleExoPlayer
+
+    private lateinit var mediaSessionConnector: MediaSessionConnector
 
     private val upstreamFactory: OkHttpDataSourceFactory by inject()
 
@@ -127,13 +129,18 @@ class MediaPlaybackService : Service() {
             setPlayer(player)
         }
 
-        binder = Binder(applicationContext, mediaSession)
+        mediaSessionConnector = MediaSessionConnector(mediaSession).apply {
+            setPlayer(player, null)
+        }
+
+        binder = Binder(mediaSession)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         mediaSession.release()
         playerNotificationManager.setPlayer(null)
+        mediaSessionConnector.setPlayer(null, null)
         player.release()
     }
 
@@ -146,10 +153,11 @@ class MediaPlaybackService : Service() {
     /**
      * Interface of [MediaPlaybackService] exposed to the rest of the application.
      */
-    class Binder(applicationContext: Context, val mediaSession: MediaSessionCompat) : android.os.Binder() {
+    class Binder(val mediaSession: MediaSessionCompat) : android.os.Binder() {
         /**
          * Provides access to the current playback state and provides controls for updating the playback state.
          */
-        val mediaController: MediaControllerCompat = MediaControllerCompat(applicationContext, mediaSession)
+        val mediaController: MediaControllerCompat
+            get() = mediaSession.controller
     }
 }
