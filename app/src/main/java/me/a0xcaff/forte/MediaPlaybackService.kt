@@ -19,7 +19,7 @@ import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.util.Util
-import me.a0xcaff.forte.ui.connect.ConnectActivity
+import me.a0xcaff.forte.ui.view.ViewActivity
 import org.koin.android.ext.android.inject
 
 const val NOW_PLAYING_NOTIFICATION_ID = 0xcaff
@@ -57,7 +57,6 @@ class MediaPlaybackService : Service() {
                 mediaSourceFactory.createMediaSource(Uri.parse("http://192.168.1.160:3000/files/music/00000000000000000000000000000001/raw"))
 
             prepare(mediaSource)
-            playWhenReady = true
             addListener(object : Player.EventListener {
                 var isForeground = true
 
@@ -89,7 +88,7 @@ class MediaPlaybackService : Service() {
             this, NOW_PLAYING_CHANNEL_ID, R.string.playback_notification_channel_name, NOW_PLAYING_NOTIFICATION_ID,
             object : PlayerNotificationManager.MediaDescriptionAdapter {
                 override fun createCurrentContentIntent(player: Player?): PendingIntent? {
-                    val intent = Intent(this@MediaPlaybackService, ConnectActivity::class.java)
+                    val intent = Intent(this@MediaPlaybackService, ViewActivity::class.java)
                     return PendingIntent.getActivity(
                         this@MediaPlaybackService,
                         0,
