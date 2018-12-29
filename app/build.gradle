@@ -37,7 +37,6 @@ android {
                 "-Xuse-experimental=kotlin.Experimental"
         ]
     }
-
     compileOptions {
         targetCompatibility JavaVersion.VERSION_1_8
     }
