@@ -149,6 +149,7 @@ class MediaPlaybackService : Service() {
     // TODO: Handle Error
     // TODO: Handle Queue
     // TODO: Wakelocks
+    // TODO: Service Isn't Stopped Properly
 
     /**
      * Interface of [MediaPlaybackService] exposed to the rest of the application.
@@ -161,3 +162,10 @@ class MediaPlaybackService : Service() {
             get() = mediaSession.controller
     }
 }
+
+/// player
+//    .createMessage((type, payload) -> Log.d("POSITION", "message triggered at 5 seconds."))
+//    .setPosition(5000)
+//    .setDeleteAfterDelivery(false)
+//    .setHandler(new Handler())
+//    .send();
