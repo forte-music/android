@@ -8,9 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.Config
-import me.a0xcaff.forte.MediaPlaybackServiceConnection
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
+import me.a0xcaff.forte.playback.MediaPlaybackServiceConnection
 import org.koin.android.ext.android.inject
 
 class ViewActivity : AppCompatActivity() {

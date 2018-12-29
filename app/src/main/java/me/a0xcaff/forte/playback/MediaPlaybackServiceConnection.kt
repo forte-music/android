@@ -1,4 +1,4 @@
-package me.a0xcaff.forte
+package me.a0xcaff.forte.playback
 
 import android.content.ComponentName
 import android.content.Context
