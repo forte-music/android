@@ -10,9 +10,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import me.a0xcaff.forte.EventObserver
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityConnectBinding
+import me.a0xcaff.forte.ui.EventObserver
 import me.a0xcaff.forte.ui.makeProgressDialog
 import me.a0xcaff.forte.ui.view.ViewActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel

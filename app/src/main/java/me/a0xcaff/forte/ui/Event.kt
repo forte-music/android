@@ -1,4 +1,4 @@
-package me.a0xcaff.forte
+package me.a0xcaff.forte.ui
 
 import androidx.lifecycle.Observer
 
