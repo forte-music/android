@@ -69,4 +69,8 @@ class BitmapFetcher(private val picasso: Picasso) {
             }
         }
     }
+
+    fun release() {
+        lastTarget?.cancel()
+    }
 }

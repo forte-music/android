@@ -42,7 +42,7 @@ class MediaPlaybackService : Service() {
 
     private lateinit var mediaSessionConnector: MediaSessionConnector
 
-    private val upstreamFactory: OkHttpDataSourceFactory by inject()
+    private val upstreamDataSourceFactory: OkHttpDataSourceFactory by inject()
 
     private val picasso: Picasso by inject()
 
@@ -61,7 +61,7 @@ class MediaPlaybackService : Service() {
         mediaSession.isActive = true
 
         player = ExoPlayerFactory.newSimpleInstance(this).apply {
-            val mediaSourceFactory = ExtractorMediaSource.Factory(upstreamFactory)
+            val mediaSourceFactory = ExtractorMediaSource.Factory(upstreamDataSourceFactory)
             val mediaSource =
                 mediaSourceFactory.createMediaSource(Uri.parse("http://192.168.1.160:3000/files/music/00000000000000000000000000000001/raw"))
 
@@ -171,6 +171,7 @@ class MediaPlaybackService : Service() {
         super.onDestroy()
         mediaSession.release()
         playerNotificationManager.setPlayer(null)
+        bitmapFetcher.release()
         mediaSessionConnector.setPlayer(null, null)
         player.release()
     }
