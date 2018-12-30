@@ -8,15 +8,15 @@ import android.os.IBinder
 
 class PlaybackServiceConnection(
     private val context: Context,
-    private val onBound: (Lifecycle) -> Unit
+    private val onBound: (PlaybackServiceBinder, Lifecycle) -> Unit
 ) : ServiceConnection {
     private var lifecycle: Lifecycle? = null
     private var bindingRequested = false
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
-        val bindingLifecycle = Lifecycle(service as PlaybackService.Binder)
+        val bindingLifecycle = Lifecycle()
         lifecycle = bindingLifecycle
-        onBound(bindingLifecycle)
+        onBound(service as PlaybackServiceBinder, bindingLifecycle)
     }
 
     override fun onBindingDied(name: ComponentName?) {
@@ -55,7 +55,7 @@ class PlaybackServiceConnection(
         lifecycle = null
     }
 
-    inner class Lifecycle(val service: PlaybackService.Binder) {
+    class Lifecycle {
         private val unbindListeners = mutableListOf<() -> Unit>()
 
         fun registerOnUnbind(listener: () -> Unit) {

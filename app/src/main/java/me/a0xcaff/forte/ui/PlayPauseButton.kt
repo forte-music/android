@@ -10,22 +10,15 @@ class PlayPauseButton @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : ImageButton(context, attrs, defStyleAttr) {
-    var isPlaying: Boolean = true
-        set(value) {
-            field = value
-            isPlayingChanged()
-        }
-
-    init {
-        isPlayingChanged()
+    fun setPlayImage() {
+        setImageResource(R.drawable.exo_controls_play)
     }
 
-    private fun isPlayingChanged() {
-        val resource = when (isPlaying) {
-            true -> R.drawable.exo_controls_pause
-            false -> R.drawable.exo_controls_play
-        }
+    fun setPauseImage() {
+        setImageResource(R.drawable.exo_controls_pause)
+    }
 
-        setImageResource(resource)
+    fun clearImage() {
+        setImageDrawable(null)
     }
 }

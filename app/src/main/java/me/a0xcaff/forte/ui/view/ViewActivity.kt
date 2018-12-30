@@ -1,8 +1,6 @@
 package me.a0xcaff.forte.ui.view
 
 import android.os.Bundle
-import android.support.v4.media.session.MediaControllerCompat
-import android.support.v4.media.session.PlaybackStateCompat
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -11,6 +9,7 @@ import me.a0xcaff.forte.Config
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
+import me.a0xcaff.forte.playback.PlaybackState
 import org.koin.android.ext.android.inject
 
 class ViewActivity : AppCompatActivity() {
@@ -24,29 +23,28 @@ class ViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_view)
-        connection = PlaybackServiceConnection(this) { lifecycle ->
+        connection = PlaybackServiceConnection(this) { service, lifecycle ->
             binding.playPause.setOnClickListener {
-                if (binding.playPause.isPlaying) {
-                    lifecycle.service.mediaController.transportControls.pause()
+                if (service.playWhenReady) {
+                    service.pause()
                 } else {
-                    lifecycle.service.mediaController.transportControls.play()
+                    service.play()
                 }
             }
+
             lifecycle.registerOnUnbind {
                 binding.playPause.setOnClickListener(null)
             }
 
-            updatePlaybackState(lifecycle.service.mediaController.playbackState)
-            val callback =
-                object : MediaControllerCompat.Callback() {
-                    override fun onPlaybackStateChanged(state: PlaybackStateCompat) {
-                        updatePlaybackState(state)
-                    }
-                }
+            updatePlaybackState(service.state, service.playWhenReady)
+            val observer: (Unit) -> Unit = {
+                updatePlaybackState(service.state, service.playWhenReady)
+            }
 
-            lifecycle.service.mediaController.registerCallback(callback)
+            service.playbackStateChanged.observe(observer)
+
             lifecycle.registerOnUnbind {
-                lifecycle.service.mediaController.unregisterCallback(callback)
+                service.playbackStateChanged.unObserve(observer)
             }
         }
 
@@ -86,13 +84,11 @@ class ViewActivity : AppCompatActivity() {
         })
     }
 
-    fun updatePlaybackState(state: PlaybackStateCompat) {
-        if (state.state == PlaybackStateCompat.STATE_PLAYING) {
-            binding.playPause.isPlaying = true
-        }
-
-        if (state.state == PlaybackStateCompat.STATE_PAUSED) {
-            binding.playPause.isPlaying = false
+    private fun updatePlaybackState(state: PlaybackState, playWhenReady: Boolean) {
+        when {
+            state is PlaybackState.Ready && playWhenReady -> binding.playPause.setPauseImage()
+            state is PlaybackState.Ready && !playWhenReady -> binding.playPause.setPlayImage()
+            else -> binding.playPause.clearImage()
         }
     }
 

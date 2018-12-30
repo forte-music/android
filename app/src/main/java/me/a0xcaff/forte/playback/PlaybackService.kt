@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
-import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -32,7 +31,7 @@ const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
  * Service responsible for playing audio and keeping the notification up to date.
  */
 class PlaybackService : Service() {
-    private lateinit var binder: Binder
+    private lateinit var binder: PlaybackServiceBinderImpl
 
     private lateinit var mediaSession: MediaSessionCompat
 
@@ -83,6 +82,7 @@ class PlaybackService : Service() {
                                 this@PlaybackService,
                                 Intent(applicationContext, PlaybackService::class.java)
                             )
+                            // TODO: This start foreground is responsible for the notification flickering.
                             startForeground(NOW_PLAYING_NOTIFICATION_ID, notification)
                             isForeground = true
                         }
@@ -164,11 +164,12 @@ class PlaybackService : Service() {
             setPlayer(player, null)
         }
 
-        binder = Binder(mediaSession)
+        binder = PlaybackServiceBinderImpl(player)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        binder.release()
         mediaSession.release()
         playerNotificationManager.setPlayer(null)
         bitmapFetcher.release()
@@ -182,17 +183,6 @@ class PlaybackService : Service() {
     // TODO: Handle Queue
     // TODO: Wakelocks
     // TODO: Service Isn't Stopped Properly
-
-    /**
-     * Interface of [PlaybackService] exposed to the rest of the application.
-     */
-    class Binder(val mediaSession: MediaSessionCompat) : android.os.Binder() {
-        /**
-         * Provides access to the current playback state and provides controls for updating the playback state.
-         */
-        val mediaController: MediaControllerCompat
-            get() = mediaSession.controller
-    }
 }
 
 /// player
