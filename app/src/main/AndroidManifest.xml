@@ -35,7 +35,7 @@
             android:name=".ui.view.ViewActivity"
             android:launchMode="singleTop" />
 
-        <service android:name=".playback.MediaPlaybackService" />
+        <service android:name=".playback.PlaybackService" />
 
         <!--
             MediaSession, prior to API 21, uses a broadcast receiver to communicate with a

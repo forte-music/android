@@ -31,7 +31,7 @@ const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
 /**
  * Service responsible for playing audio and keeping the notification up to date.
  */
-class MediaPlaybackService : Service() {
+class PlaybackService : Service() {
     private lateinit var binder: Binder
 
     private lateinit var mediaSession: MediaSessionCompat
@@ -80,8 +80,8 @@ class MediaPlaybackService : Service() {
                         }
                         !isForeground && notification != null -> {
                             Util.startForegroundService(
-                                this@MediaPlaybackService,
-                                Intent(applicationContext, MediaPlaybackService::class.java)
+                                this@PlaybackService,
+                                Intent(applicationContext, PlaybackService::class.java)
                             )
                             startForeground(NOW_PLAYING_NOTIFICATION_ID, notification)
                             isForeground = true
@@ -90,7 +90,7 @@ class MediaPlaybackService : Service() {
                 }
             })
 
-            setAudioAttributes(this@MediaPlaybackService.audioAttributes, true)
+            setAudioAttributes(this@PlaybackService.audioAttributes, true)
         }
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
@@ -100,9 +100,9 @@ class MediaPlaybackService : Service() {
             NOW_PLAYING_NOTIFICATION_ID,
             object : PlayerNotificationManager.MediaDescriptionAdapter {
                 override fun createCurrentContentIntent(player: Player?): PendingIntent? {
-                    val intent = Intent(this@MediaPlaybackService, ViewActivity::class.java)
+                    val intent = Intent(this@PlaybackService, ViewActivity::class.java)
                     return PendingIntent.getActivity(
-                        this@MediaPlaybackService,
+                        this@PlaybackService,
                         0,
                         intent,
                         PendingIntent.FLAG_UPDATE_CURRENT
@@ -132,7 +132,7 @@ class MediaPlaybackService : Service() {
                 }
 
                 override fun onNotificationStarted(notificationId: Int, notification: Notification?) {
-                    this@MediaPlaybackService.notification = notification
+                    this@PlaybackService.notification = notification
                     startForeground(notificationId, notification)
                 }
             })
@@ -184,7 +184,7 @@ class MediaPlaybackService : Service() {
     // TODO: Service Isn't Stopped Properly
 
     /**
-     * Interface of [MediaPlaybackService] exposed to the rest of the application.
+     * Interface of [PlaybackService] exposed to the rest of the application.
      */
     class Binder(val mediaSession: MediaSessionCompat) : android.os.Binder() {
         /**

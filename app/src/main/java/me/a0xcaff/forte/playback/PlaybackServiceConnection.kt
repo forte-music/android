@@ -6,7 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 
-class MediaPlaybackServiceConnection(
+class PlaybackServiceConnection(
     private val context: Context,
     private val onBound: (Lifecycle) -> Unit
 ) : ServiceConnection {
@@ -14,7 +14,7 @@ class MediaPlaybackServiceConnection(
     private var bindingRequested = false
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
-        val bindingLifecycle = Lifecycle(service as MediaPlaybackService.Binder)
+        val bindingLifecycle = Lifecycle(service as PlaybackService.Binder)
         lifecycle = bindingLifecycle
         onBound(bindingLifecycle)
     }
@@ -24,7 +24,7 @@ class MediaPlaybackServiceConnection(
     }
 
     override fun onNullBinding(name: ComponentName?) {
-        throw IllegalStateException("MediaPlaybackServiceConnection got null binding")
+        throw IllegalStateException("PlaybackServiceConnection got null binding")
     }
 
     override fun onServiceDisconnected(name: ComponentName) {
@@ -33,10 +33,10 @@ class MediaPlaybackServiceConnection(
 
     fun bind() {
         if (bindingRequested) {
-            throw IllegalStateException("Tried to bind twice to MediaPlaybackService")
+            throw IllegalStateException("Tried to bind twice to PlaybackService")
         }
 
-        val intent = Intent(context, MediaPlaybackService::class.java)
+        val intent = Intent(context, PlaybackService::class.java)
         context.bindService(intent, this, Context.BIND_AUTO_CREATE)
         bindingRequested = true
     }
@@ -55,7 +55,7 @@ class MediaPlaybackServiceConnection(
         lifecycle = null
     }
 
-    inner class Lifecycle(val service: MediaPlaybackService.Binder) {
+    inner class Lifecycle(val service: PlaybackService.Binder) {
         private val unbindListeners = mutableListOf<() -> Unit>()
 
         fun registerOnUnbind(listener: () -> Unit) {

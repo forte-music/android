@@ -10,13 +10,13 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.Config
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
-import me.a0xcaff.forte.playback.MediaPlaybackServiceConnection
+import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import org.koin.android.ext.android.inject
 
 class ViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityViewBinding
 
-    private lateinit var connection: MediaPlaybackServiceConnection
+    private lateinit var connection: PlaybackServiceConnection
 
     private val config: Config by inject()
 
@@ -24,7 +24,7 @@ class ViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_view)
-        connection = MediaPlaybackServiceConnection(this) { lifecycle ->
+        connection = PlaybackServiceConnection(this) { lifecycle ->
             binding.playPause.setOnClickListener {
                 if (binding.playPause.isPlaying) {
                     lifecycle.service.mediaController.transportControls.pause()
