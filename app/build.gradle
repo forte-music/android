@@ -66,10 +66,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
     implementation "androidx.legacy:legacy-support-v4:1.0.0"
 
-    implementation 'com.google.android.material:material:1.1.0-alpha02'
-
-    implementation 'com.apollographql.apollo:apollo-runtime:1.0.0-alpha3'
-
     def koin_version = '1.0.2'
     implementation "org.koin:koin-core:$koin_version"
     implementation "org.koin:koin-android:$koin_version"
@@ -81,6 +77,10 @@ dependencies {
     implementation "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
     implementation "com.google.android.exoplayer:extension-mediasession:$exoplayer_version"
     implementation "com.google.android.exoplayer:extension-okhttp:$exoplayer_version"
+
+    implementation 'com.google.android.material:material:1.1.0-alpha02'
+    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.apollographql.apollo:apollo-runtime:1.0.0-alpha3'
 
     testImplementation 'junit:junit:4.12'
     testImplementation "androidx.arch.core:core-testing:$lifecycle_version"

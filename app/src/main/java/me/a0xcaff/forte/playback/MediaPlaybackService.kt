@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import com.google.android.exoplayer2.C
@@ -19,6 +20,7 @@ import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.util.Util
+import com.squareup.picasso.Picasso
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.ui.view.ViewActivity
 import org.koin.android.ext.android.inject
@@ -42,7 +44,11 @@ class MediaPlaybackService : Service() {
 
     private val upstreamFactory: OkHttpDataSourceFactory by inject()
 
+    private val picasso: Picasso by inject()
+
     private var notification: Notification? = null
+
+    private val bitmapFetcher = BitmapFetcher(picasso)
 
     private val audioAttributes = AudioAttributes.Builder()
         .setUsage(C.USAGE_MEDIA)
@@ -108,9 +114,16 @@ class MediaPlaybackService : Service() {
                 override fun getCurrentContentTitle(player: Player?): String = "Hello World (Title!)"
 
                 override fun getCurrentLargeIcon(
-                    player: Player?,
-                    callback: PlayerNotificationManager.BitmapCallback?
-                ): Bitmap? = null
+                    player: Player,
+                    callback: PlayerNotificationManager.BitmapCallback
+                ): Bitmap? = bitmapFetcher.getFor(
+                    "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb",
+                    {
+                        resizeDimen(R.dimen.notification_large_artwork_size, R.dimen.notification_large_artwork_size)
+                        centerInside()
+                    },
+                    { callback.onBitmap(it) }
+                )
             }
         ).apply {
             setNotificationListener(object : PlayerNotificationManager.NotificationListener {
@@ -133,7 +146,21 @@ class MediaPlaybackService : Service() {
             setPlayer(player)
         }
 
-        mediaSessionConnector = MediaSessionConnector(mediaSession).apply {
+        mediaSessionConnector = MediaSessionConnector(mediaSession, null, MediaSessionConnector.MediaMetadataProvider {
+            val builder = MediaMetadataCompat.Builder()
+
+            val bitmap = bitmapFetcher.getFor(
+                "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb",
+                {
+                    resizeDimen(R.dimen.media_session_max_artwork_size, R.dimen.media_session_max_artwork_size)
+                    centerInside()
+                }, { mediaSessionConnector.invalidateMediaSessionMetadata() }
+            )
+
+            builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
+
+            builder.build()
+        }).apply {
             setPlayer(player, null)
         }
 
