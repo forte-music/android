@@ -97,8 +97,8 @@ class ViewActivity : AppCompatActivity() {
         connection.bind()
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         connection.tryUnbind()
     }
 }
