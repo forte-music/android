@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
@@ -18,6 +19,7 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
+import com.google.android.exoplayer2.util.NotificationUtil
 import com.google.android.exoplayer2.util.Util
 import com.squareup.picasso.Picasso
 import me.a0xcaff.forte.R
@@ -45,17 +47,12 @@ class PlaybackService : Service() {
 
     private val picasso: Picasso by inject()
 
-    private var notification: Notification? = null
-
     private val bitmapFetcher = BitmapFetcher(picasso)
-
-    private val audioAttributes = AudioAttributes.Builder()
-        .setUsage(C.USAGE_MEDIA)
-        .setContentType(C.CONTENT_TYPE_MUSIC)
-        .build()
 
     override fun onCreate() {
         super.onCreate()
+        val context = this
+
         mediaSession = MediaSessionCompat(this, "ForteMediaPlaybackService")
         mediaSession.isActive = true
 
@@ -65,82 +62,89 @@ class PlaybackService : Service() {
                 mediaSourceFactory.createMediaSource(Uri.parse("http://192.168.1.160:3000/files/music/00000000000000000000000000000001/raw"))
 
             prepare(mediaSource)
-            addListener(object : Player.EventListener {
-                var isForeground = true
 
-                override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                    val isPaused = playbackState == Player.STATE_READY && !playWhenReady
-                    val isEnded = playbackState == Player.STATE_ENDED
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(C.CONTENT_TYPE_MUSIC)
+                .build()
 
-                    when {
-                        isForeground && (isPaused || isEnded) -> {
-                            stopForeground(false)
-                            isForeground = false
-                        }
-                        !isForeground && notification != null -> {
-                            Util.startForegroundService(
-                                this@PlaybackService,
-                                Intent(applicationContext, PlaybackService::class.java)
-                            )
-                            // TODO: This start foreground is responsible for the notification flickering.
-                            startForeground(NOW_PLAYING_NOTIFICATION_ID, notification)
-                            isForeground = true
-                        }
-                    }
-                }
-            })
-
-            setAudioAttributes(this@PlaybackService.audioAttributes, true)
+            setAudioAttributes(audioAttributes, true)
         }
 
-        playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
+        val metadataDescriptor = object : PlayerNotificationManager.MediaDescriptionAdapter {
+            override fun createCurrentContentIntent(player: Player?): PendingIntent? {
+                val intent = Intent(context, ViewActivity::class.java)
+                return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+
+            override fun getCurrentContentText(player: Player?): String? = "Hello World (Subtitle!)"
+
+            override fun getCurrentContentTitle(player: Player?): String = "Hello World (Title!)"
+
+            override fun getCurrentLargeIcon(
+                player: Player,
+                callback: PlayerNotificationManager.BitmapCallback
+            ): Bitmap? = bitmapFetcher.getFor(
+                "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb",
+                {
+                    resizeDimen(R.dimen.notification_large_artwork_size, R.dimen.notification_large_artwork_size)
+                    centerInside()
+                },
+                { callback.onBitmap(it) }
+            )
+        }
+
+        val notificationDispatcher = object : PlayerNotificationManager.NotificationDispatcher {
+            var foregrounded = false
+            val notificationManager = NotificationManagerCompat.from(context)
+
+            override fun notify(notificationId: Int, notification: Notification) {
+                if (player.playWhenReady && !foregrounded) {
+                    Util.startForegroundService(
+                        context,
+                        Intent(context, PlaybackService::class.java)
+                    )
+
+                    startForeground(notificationId, notification)
+                    foregrounded = true
+                } else {
+                    notificationManager.notify(notificationId, notification)
+                }
+
+                if (!player.playWhenReady && foregrounded) {
+                    stopForeground(false)
+                    foregrounded = false
+                }
+            }
+
+            override fun cancel(notificationId: Int) {
+                notificationManager.cancel(notificationId)
+                stopForeground(true)
+                // stopSelf()
+                foregrounded = false
+            }
+        }
+
+        NotificationUtil.createNotificationChannel(
             this,
             NOW_PLAYING_CHANNEL_ID,
             R.string.playback_notification_channel_name,
+            NotificationUtil.IMPORTANCE_LOW
+        )
+
+        playerNotificationManager = PlayerNotificationManager(
+            this,
+            NOW_PLAYING_CHANNEL_ID,
             NOW_PLAYING_NOTIFICATION_ID,
-            object : PlayerNotificationManager.MediaDescriptionAdapter {
-                override fun createCurrentContentIntent(player: Player?): PendingIntent? {
-                    val intent = Intent(this@PlaybackService, ViewActivity::class.java)
-                    return PendingIntent.getActivity(
-                        this@PlaybackService,
-                        0,
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                    )
-                }
-
-                override fun getCurrentContentText(player: Player?): String? = "Hello World (Subtitle!)"
-
-                override fun getCurrentContentTitle(player: Player?): String = "Hello World (Title!)"
-
-                override fun getCurrentLargeIcon(
-                    player: Player,
-                    callback: PlayerNotificationManager.BitmapCallback
-                ): Bitmap? = bitmapFetcher.getFor(
-                    "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb",
-                    {
-                        resizeDimen(R.dimen.notification_large_artwork_size, R.dimen.notification_large_artwork_size)
-                        centerInside()
-                    },
-                    { callback.onBitmap(it) }
-                )
-            }
+            metadataDescriptor,
+            null,
+            notificationDispatcher
         ).apply {
-            setNotificationListener(object : PlayerNotificationManager.NotificationListener {
-                override fun onNotificationCancelled(notificationId: Int) {
-                    stopSelf()
-                }
-
-                override fun onNotificationStarted(notificationId: Int, notification: Notification?) {
-                    this@PlaybackService.notification = notification
-                    startForeground(notificationId, notification)
-                }
-            })
-
             setMediaSessionToken(mediaSession.sessionToken)
             setFastForwardIncrementMs(0)
             setRewindIncrementMs(0)
-            setStopAction(null)
+            // TODO: It looks like cancel is only called if the following line is commented.
+            // setStopAction(null)
             setOngoing(false)
 
             setPlayer(player)
@@ -178,6 +182,10 @@ class PlaybackService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = binder
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return Service.START_NOT_STICKY
+    }
 
     // TODO: Handle Error
     // TODO: Handle Queue
