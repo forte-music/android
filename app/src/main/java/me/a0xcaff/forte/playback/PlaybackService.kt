@@ -149,7 +149,7 @@ class PlaybackService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = binder
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = Service.START_NOT_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = Service.START_STICKY
 
     // TODO: Handle Error
     // TODO: Handle Queue

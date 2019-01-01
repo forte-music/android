@@ -309,6 +309,7 @@ class NotificationDispatcher(
     fun cancel() {
         notificationManager.cancel(notificationId)
         service.stopForeground(true)
+        service.stopSelf()
         foregrounded = false
     }
 }
