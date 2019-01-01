@@ -1,6 +1,5 @@
 package me.a0xcaff.forte.playback
 
-import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
@@ -9,7 +8,6 @@ import android.net.Uri
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
-import androidx.core.app.NotificationManagerCompat
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
@@ -18,9 +16,7 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
-import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.util.NotificationUtil
-import com.google.android.exoplayer2.util.Util
 import com.squareup.picasso.Picasso
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.ui.view.ViewActivity
@@ -47,7 +43,10 @@ class PlaybackService : Service() {
 
     private val picasso: Picasso by inject()
 
-    private val bitmapFetcher = BitmapFetcher(picasso)
+    // TODO: Shouldn't Have to Use Two Bitmap Fetchers
+    private val notificationBitmapFetcher = BitmapFetcher(picasso)
+
+    private val mediaSessionBitmapFetcher = BitmapFetcher(picasso)
 
     override fun onCreate() {
         super.onCreate()
@@ -72,57 +71,26 @@ class PlaybackService : Service() {
         }
 
         val metadataDescriptor = object : PlayerNotificationManager.MediaDescriptionAdapter {
-            override fun createCurrentContentIntent(player: Player?): PendingIntent? {
+            override fun getCurrentContentTitle(player: Player): String = "Hello World (Title!)"
+
+            override fun getCurrentContentText(player: Player): String? = "Hello World (Subtitle!)"
+
+            override fun createCurrentContentIntent(player: Player): PendingIntent {
                 val intent = Intent(context, ViewActivity::class.java)
                 return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
             }
 
-            override fun getCurrentContentText(player: Player?): String? = "Hello World (Subtitle!)"
-
-            override fun getCurrentContentTitle(player: Player?): String = "Hello World (Title!)"
-
             override fun getCurrentLargeIcon(
                 player: Player,
                 callback: PlayerNotificationManager.BitmapCallback
-            ): Bitmap? = bitmapFetcher.getFor(
+            ): Bitmap? = notificationBitmapFetcher.getFor(
                 "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb",
                 {
                     resizeDimen(R.dimen.notification_large_artwork_size, R.dimen.notification_large_artwork_size)
                     centerInside()
                 },
-                { callback.onBitmap(it) }
+                callback::onBitmap
             )
-        }
-
-        val notificationDispatcher = object : PlayerNotificationManager.NotificationDispatcher {
-            var foregrounded = false
-            val notificationManager = NotificationManagerCompat.from(context)
-
-            override fun notify(notificationId: Int, notification: Notification) {
-                if (player.playWhenReady && !foregrounded) {
-                    Util.startForegroundService(
-                        context,
-                        Intent(context, PlaybackService::class.java)
-                    )
-
-                    startForeground(notificationId, notification)
-                    foregrounded = true
-                } else {
-                    notificationManager.notify(notificationId, notification)
-                }
-
-                if (!player.playWhenReady && foregrounded) {
-                    stopForeground(false)
-                    foregrounded = false
-                }
-            }
-
-            override fun cancel(notificationId: Int) {
-                notificationManager.cancel(notificationId)
-                stopForeground(true)
-                // stopSelf()
-                foregrounded = false
-            }
         }
 
         NotificationUtil.createNotificationChannel(
@@ -133,38 +101,35 @@ class PlaybackService : Service() {
         )
 
         playerNotificationManager = PlayerNotificationManager(
+            player,
             this,
-            NOW_PLAYING_CHANNEL_ID,
-            NOW_PLAYING_NOTIFICATION_ID,
             metadataDescriptor,
+            mediaSession.sessionToken,
+            NOW_PLAYING_NOTIFICATION_ID,
+            NOW_PLAYING_CHANNEL_ID
+        )
+
+        mediaSessionConnector = MediaSessionConnector(
+            mediaSession,
             null,
-            notificationDispatcher
+            MediaSessionConnector.MediaMetadataProvider {
+                val builder = MediaMetadataCompat.Builder()
+
+                val bitmap = mediaSessionBitmapFetcher.getFor(
+                    "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb",
+                    {
+                        resizeDimen(R.dimen.media_session_max_artwork_size, R.dimen.media_session_max_artwork_size)
+                        centerInside()
+                    }, {
+                        mediaSessionConnector.invalidateMediaSessionMetadata()
+                    }
+                )
+
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
+
+                builder.build()
+            }
         ).apply {
-            setMediaSessionToken(mediaSession.sessionToken)
-            setFastForwardIncrementMs(0)
-            setRewindIncrementMs(0)
-            // TODO: It looks like cancel is only called if the following line is commented.
-            // setStopAction(null)
-            setOngoing(false)
-
-            setPlayer(player)
-        }
-
-        mediaSessionConnector = MediaSessionConnector(mediaSession, null, MediaSessionConnector.MediaMetadataProvider {
-            val builder = MediaMetadataCompat.Builder()
-
-            val bitmap = bitmapFetcher.getFor(
-                "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb",
-                {
-                    resizeDimen(R.dimen.media_session_max_artwork_size, R.dimen.media_session_max_artwork_size)
-                    centerInside()
-                }, { mediaSessionConnector.invalidateMediaSessionMetadata() }
-            )
-
-            builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
-
-            builder.build()
-        }).apply {
             setPlayer(player, null)
         }
 
@@ -175,22 +140,20 @@ class PlaybackService : Service() {
         super.onDestroy()
         binder.release()
         mediaSession.release()
-        playerNotificationManager.setPlayer(null)
-        bitmapFetcher.release()
+        playerNotificationManager.release()
+        notificationBitmapFetcher.release()
+        mediaSessionBitmapFetcher.release()
         mediaSessionConnector.setPlayer(null, null)
         player.release()
     }
 
     override fun onBind(intent: Intent?): IBinder? = binder
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        return Service.START_NOT_STICKY
-    }
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = Service.START_NOT_STICKY
 
     // TODO: Handle Error
     // TODO: Handle Queue
     // TODO: Wakelocks
-    // TODO: Service Isn't Stopped Properly
 }
 
 /// player
