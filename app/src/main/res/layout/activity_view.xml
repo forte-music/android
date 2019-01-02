@@ -11,12 +11,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <TextView
-            android:id="@+id/server_url"
+        <fragment
+            android:id="@+id/queue_fragment"
+            android:name="me.a0xcaff.forte.ui.view.QueueFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            tools:text="Hello World!" />
+            tools:layout="@layout/fragment_queue" />
 
         <FrameLayout
             android:id="@+id/sheet"

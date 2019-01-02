@@ -5,12 +5,10 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import me.a0xcaff.forte.Config
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
-import org.koin.android.ext.android.inject
 
 // TODO: Display Queue
 // TODO: MotionLayout
@@ -19,8 +17,6 @@ class ViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityViewBinding
 
     private lateinit var connection: PlaybackServiceConnection
-
-    private val config: Config by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,8 +42,6 @@ class ViewActivity : AppCompatActivity() {
                 service.playbackStateChanged.unObserve(observer)
             }
         }
-
-        binding.serverUrl.text = config.serverUrl.toString()
 
         val bottomSheetBehavior = BottomSheetBehavior.from(binding.sheet)
         val peek = binding.sheetPeek
