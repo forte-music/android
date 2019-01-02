@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.a0xcaff.forte.databinding.FragmentQueueBinding
@@ -12,6 +13,12 @@ import me.a0xcaff.forte.databinding.QueueItemBinding
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.Queue
 import me.a0xcaff.forte.playback.QueueItem
+
+// TODO: Dismissing Currently Playing Item Crashes
+// TODO: Better Styling
+// TODO: Skip to Position on Click
+// TODO: Use Drag Handle Maybe
+// TODO: Move Into Bottom Sheet
 
 /**
  * Displays a UI for viewing, modifying, and skipping to a specific position in a [Queue].
@@ -25,11 +32,15 @@ class QueueFragment : Fragment() {
         binding = FragmentQueueBinding.inflate(inflater, container, false)
 
         val queueAdapter = QueueAdapter()
-        binding.items.apply {
+
+        val recyclerView = binding.items
+        recyclerView.apply {
             layoutManager = LinearLayoutManager(context!!)
             adapter = queueAdapter
             setHasFixedSize(true)
         }
+
+        queueAdapter.itemTouchHelper.attachToRecyclerView(recyclerView)
 
         connection = PlaybackServiceConnection(context!!) { service, lifecycle ->
             queueAdapter.queue = service.queue
@@ -53,6 +64,10 @@ class QueueFragment : Fragment() {
 }
 
 class QueueAdapter : RecyclerView.Adapter<QueueAdapter.ViewHolder>() {
+    private val itemTouchCallback = ItemTouchCallback()
+
+    val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
+
     init {
         setHasStableIds(true)
     }
@@ -85,5 +100,24 @@ class QueueAdapter : RecyclerView.Adapter<QueueAdapter.ViewHolder>() {
     override fun getItemId(position: Int): Long = queue!!.items[position].id
 
     override fun getItemCount(): Int = queue?.items?.size ?: 0
+
+    inner class ItemTouchCallback : ItemTouchHelper.SimpleCallback(
+        ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+        ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+    ) {
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            queue?.move(viewHolder.adapterPosition, target.adapterPosition)
+
+            return true
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            queue?.remove(viewHolder.adapterPosition)
+        }
+    }
 }
 
