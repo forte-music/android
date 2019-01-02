@@ -12,6 +12,9 @@ import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
 import org.koin.android.ext.android.inject
 
+// TODO: Display Queue
+// TODO: MotionLayout
+
 class ViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityViewBinding
 
@@ -25,11 +28,7 @@ class ViewActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_view)
         connection = PlaybackServiceConnection(this) { service, lifecycle ->
             binding.playPause.setOnClickListener {
-                if (service.playWhenReady) {
-                    service.pause()
-                } else {
-                    service.play()
-                }
+                service.playWhenReady = !service.playWhenReady
             }
 
             lifecycle.registerOnUnbind {
