@@ -33,15 +33,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <ProgressBar
+                <me.a0xcaff.forte.ui.PlaybackProgressBar
                     android:id="@+id/playback_progress"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
+                    app:buffered_color="?android:attr/colorForeground"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:progress="25" />
+                    app:played_color="?attr/colorAccent"
+                    tools:buffered_progress="0.20"
+                    tools:played_progress="0.15" />
 
                 <View
                     android:id="@+id/heart_placeholder"

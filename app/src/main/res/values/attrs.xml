@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="PlaybackProgressBar">
+        <attr name="played_color" format="color" />
+        <attr name="played_progress" format="float" />
+        <attr name="buffered_color" format="color" />
+        <attr name="buffered_progress" format="float" />
+    </declare-styleable>
+</resources>

@@ -11,6 +11,7 @@ import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
 
 // TODO: MotionLayout
+// TODO: Better Connect Service Lifecycle
 
 class ViewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityViewBinding
@@ -40,6 +41,9 @@ class ViewActivity : AppCompatActivity() {
             lifecycle.registerOnUnbind {
                 service.playbackStateChanged.unObserve(observer)
             }
+
+            binding.playbackProgress.registerBinder(service)
+            lifecycle.registerOnUnbind { binding.playbackProgress.unregisterBinder() }
         }
 
         val bottomSheetBehavior = BottomSheetBehavior.from(binding.sheet)

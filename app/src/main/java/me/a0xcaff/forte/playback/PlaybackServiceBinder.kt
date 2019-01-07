@@ -1,7 +1,6 @@
 package me.a0xcaff.forte.playback
 
 import android.os.Binder
-import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.Player
 
 sealed class PlaybackState {
@@ -45,14 +44,31 @@ interface PlaybackServiceBinder {
     val queue: Queue
 
     /**
-     * The current position in the queue. Can be [C.INDEX_UNSET].
-     */
-    val queuePosition: Int
-
-    /**
      * The item currently playing. Null if there is none.
      */
-    val nowPlaying: QueueItem?
+    val nowPlaying: NowPlayingInfo?
+}
+
+interface NowPlayingInfo {
+    /**
+     * Data used to play item in the queue.
+     */
+    val item: QueueItem
+
+    /**
+     * The current progress of the track as number of milliseconds played. Poll this value progress updates.
+     */
+    val currentPosition: Long
+
+    /**
+     * The duration of track in milliseconds.
+     */
+    val duration: Long
+
+    /**
+     * Milliseconds buffered.
+     */
+    val bufferedPosition: Long
 }
 
 /**
@@ -77,11 +93,8 @@ class PlaybackServiceBinderImpl(
 
     private val listener = Listener()
 
-    override val queuePosition: Int
-        get() = player.currentWindowIndex
-
-    override val nowPlaying: QueueItem?
-        get() = queue.getNowPlaying(player)
+    override val nowPlaying: NowPlayingInfo?
+        get() = NowPlayingInfoImpl()
 
     init {
         player.addListener(listener)
@@ -95,6 +108,20 @@ class PlaybackServiceBinderImpl(
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             _playbackStateChanged.dispatch(Unit)
         }
+    }
+
+    inner class NowPlayingInfoImpl : NowPlayingInfo {
+        override val item: QueueItem
+            get() = queue.getNowPlaying(player)!!
+
+        override val currentPosition: Long
+            get() = player.currentPosition
+
+        override val duration: Long
+            get() = player.duration
+
+        override val bufferedPosition: Long
+            get() = player.bufferedPosition
     }
 }
 

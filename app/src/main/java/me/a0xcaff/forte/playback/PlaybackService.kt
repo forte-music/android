@@ -56,7 +56,7 @@ class PlaybackService : Service() {
             mediaSource,
             mediaSourceFactory,
             Quality.RAW,
-            Uri.parse("http://192.168.1.160:3000/")
+            Uri.parse("http://10.0.2.2:3000/")
         )
 
         queue.registerObserver(updater)
@@ -148,7 +148,6 @@ class PlaybackService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = Service.START_STICKY
 
     // TODO: Handle Error
-    // TODO: Handle Queue
     // TODO: Wakelocks
 }
 
