@@ -10,7 +10,6 @@ import me.a0xcaff.forte.databinding.ActivityViewBinding
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
 
-// TODO: MotionLayout
 // TODO: Better Connect Service Lifecycle
 
 class ViewActivity : AppCompatActivity() {
