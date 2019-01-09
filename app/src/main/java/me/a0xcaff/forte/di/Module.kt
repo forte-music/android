@@ -1,5 +1,6 @@
 package me.a0xcaff.forte.di
 
+import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
@@ -14,7 +15,11 @@ import org.koin.androidx.viewmodel.ext.koin.viewModel
 import org.koin.dsl.module.module
 
 val Module = module {
-    single { OkHttpClient() }
+    single {
+        OkHttpClient.Builder()
+            .addNetworkInterceptor(StethoInterceptor())
+            .build()
+    }
     single {
         Picasso.Builder(androidContext())
             .downloader(OkHttp3Downloader(get<OkHttpClient>()))

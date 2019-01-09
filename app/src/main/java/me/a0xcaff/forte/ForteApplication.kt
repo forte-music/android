@@ -7,6 +7,7 @@ import org.koin.android.ext.android.startKoin
 class ForteApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        startStetho(this)
         startKoin(this, listOf(Module))
     }
 }
