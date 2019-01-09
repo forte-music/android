@@ -39,10 +39,7 @@ class PlaybackService : Service() {
 
     private val picasso: Picasso by inject()
 
-    // TODO: Shouldn't Have to Use Two Bitmap Fetchers
-    private val notificationBitmapFetcher = BitmapFetcher(picasso)
-
-    private val mediaSessionBitmapFetcher = BitmapFetcher(picasso)
+    private val bitmapFetcher = BitmapFetcher(picasso)
 
     override fun onCreate() {
         super.onCreate()
@@ -78,7 +75,7 @@ class PlaybackService : Service() {
         val mediaDescriptionAdapter = NotificationMetadataProvider(
             queue,
             context,
-            notificationBitmapFetcher
+            bitmapFetcher
         )
 
         NotificationUtil.createNotificationChannel(
@@ -100,7 +97,7 @@ class PlaybackService : Service() {
         mediaSessionConnector = MediaSessionMetadataProvider.withConnector(
             mediaSession,
             queue,
-            mediaSessionBitmapFetcher
+            bitmapFetcher
         ).apply {
             setPlayer(player, null)
         }
@@ -137,8 +134,7 @@ class PlaybackService : Service() {
         binder.release()
         playerNotificationManager.release()
         mediaSession.release()
-        notificationBitmapFetcher.release()
-        mediaSessionBitmapFetcher.release()
+        bitmapFetcher.release()
         mediaSessionConnector.setPlayer(null, null)
         player.release()
     }

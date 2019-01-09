@@ -16,12 +16,8 @@ import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Timeline
 import com.google.android.exoplayer2.util.Util
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import me.a0xcaff.forte.R
-import kotlin.coroutines.CoroutineContext
 
 class PlayerNotificationManager(
     private val player: Player,
@@ -35,7 +31,7 @@ class PlayerNotificationManager(
     private val actions = DefaultActions(context, notificationId)
     private val broadcastReceiver = NotificationBroadcastReceiver(notificationId)
     private val notificationDispatcher = NotificationDispatcher(notificationId, service, player)
-    private val coroutineContext = CancelableCoroutineScope(Dispatchers.Main)
+    private val coroutineContext = CoroutineScope(Dispatchers.Main)
     private val listener = PlayerListener(player, this::startOrUpdateNotification)
 
     private var currentNotificationTag = 0
@@ -45,6 +41,7 @@ class PlayerNotificationManager(
         player.addListener(listener)
     }
 
+    @UseExperimental(ExperimentalCoroutinesApi::class)
     fun release() {
         coroutineContext.cancel()
         player.removeListener(listener)
@@ -313,14 +310,3 @@ class NotificationDispatcher(
         foregrounded = false
     }
 }
-
-class CancelableCoroutineScope(parent: CoroutineContext) : CoroutineScope {
-    private val scopeJob = Job()
-
-    override val coroutineContext: CoroutineContext = parent + scopeJob
-
-    fun cancel() {
-        scopeJob.cancel()
-    }
-}
-
