@@ -6,7 +6,6 @@ import com.squareup.picasso.Picasso
 import com.squareup.picasso.RequestCreator
 import com.squareup.picasso.Target
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.lang.Exception
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -16,8 +15,8 @@ import kotlin.coroutines.resumeWithException
  *
  * The params are weird to support cancellations.
  */
-suspend fun Picasso.get(url: String, transform: RequestCreator.() -> Unit): Bitmap
-    = suspendCancellableCoroutine { continuation ->
+suspend fun Picasso.get(url: String, transform: RequestCreator.() -> Unit): Bitmap =
+    suspendCancellableCoroutine { continuation ->
         val tag = Any()
 
         load(url)
@@ -28,11 +27,10 @@ suspend fun Picasso.get(url: String, transform: RequestCreator.() -> Unit): Bitm
                     // Do nothing.
                 }
 
-                override fun onBitmapFailed(e: Exception, errorDrawable: Drawable?)
-                    = continuation.resumeWithException(e)
+                override fun onBitmapFailed(e: Exception, errorDrawable: Drawable?) =
+                    continuation.resumeWithException(e)
 
-                override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom)
-                    = continuation.resume(bitmap)
+                override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom) = continuation.resume(bitmap)
             })
 
         continuation.invokeOnCancellation { cancelTag(tag) }
