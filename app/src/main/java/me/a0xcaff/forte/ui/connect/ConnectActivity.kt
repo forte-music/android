@@ -8,24 +8,24 @@ import android.text.TextWatcher
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
+import androidx.lifecycle.*
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityConnectBinding
 import me.a0xcaff.forte.ui.EventObserver
+import me.a0xcaff.forte.ui.dataBinding
 import me.a0xcaff.forte.ui.makeProgressDialog
 import me.a0xcaff.forte.ui.view.ViewActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ConnectActivity : AppCompatActivity() {
     val viewModel: ConnectActivityViewModel by viewModel()
-    private lateinit var binding: ActivityConnectBinding
+    val binding: ActivityConnectBinding by dataBinding(R.layout.activity_connect)
+
     private lateinit var dialog: AlertDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_connect)
         dialog = makeProgressDialog(this)
 
         binding.serverUrlInput.editText?.setText(viewModel.url.value)

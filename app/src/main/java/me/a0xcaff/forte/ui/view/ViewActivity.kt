@@ -3,24 +3,23 @@ package me.a0xcaff.forte.ui.view
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
+import me.a0xcaff.forte.ui.dataBinding
 
 // TODO: Better Connect Service Lifecycle
 
 class ViewActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityViewBinding
+    val binding: ActivityViewBinding by dataBinding(R.layout.activity_view)
 
     private lateinit var connection: PlaybackServiceConnection
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_view)
         connection = PlaybackServiceConnection(this) { service, lifecycle ->
             binding.playPause.setOnClickListener {
                 service.playWhenReady = !service.playWhenReady
