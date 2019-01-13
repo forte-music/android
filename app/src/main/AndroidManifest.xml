@@ -14,7 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
-        android:theme="@style/AppTheme"
+        android:theme="@style/NoActionBar"
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
 
         <activity
@@ -28,8 +28,7 @@
         </activity>
 
         <activity
-            android:name=".ui.connect.ConnectActivity"
-            android:theme="@style/NoActionBar" />
+            android:name=".ui.connect.ConnectActivity" />
 
         <activity
             android:name=".ui.view.ViewActivity"

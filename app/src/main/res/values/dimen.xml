@@ -2,4 +2,5 @@
 <resources>
     <dimen name="notification_large_artwork_size">128dp</dimen>
     <dimen name="media_session_max_artwork_size">320dp</dimen>
+    <dimen name="view_bottom_sheet_peek">58dp</dimen>
 </resources>

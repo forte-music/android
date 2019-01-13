@@ -24,7 +24,7 @@
             android:layout_height="match_parent"
             android:background="#333333"
             app:behavior_hideable="false"
-            app:behavior_peekHeight="66dp"
+            app:behavior_peekHeight="@dimen/view_bottom_sheet_peek"
             app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -48,9 +48,9 @@
 
                 <View
                     android:id="@+id/heart_placeholder"
-                    android:layout_height="48dp"
-                    android:layout_width="48dp"
-                    android:layout_marginStart="16dp"
+                    android:layout_height="36dp"
+                    android:layout_width="36dp"
+                    android:layout_marginStart="8dp"
                     android:layout_marginBottom="8dp"
                     android:layout_marginTop="8dp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -63,8 +63,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:gravity="center"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/play_pause"
@@ -75,12 +75,12 @@
                 <me.a0xcaff.forte.ui.PlayPauseButton
                     android:id="@+id/play_pause"
                     android:background="@drawable/round_button"
-                    android:layout_marginEnd="16dp"
+                    android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
                     android:layout_marginTop="8dp"
-                    android:layout_height="48dp"
+                    android:layout_height="36dp"
                     android:contentDescription="@string/play_pause_content"
-                    android:layout_width="48dp"
+                    android:layout_width="36dp"
                     android:padding="4dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintDimensionRatio="1:1"
@@ -89,15 +89,19 @@
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
-            <TextView
-                android:id="@+id/sheet_content"
+
+            <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center"
-                android:visibility="visible"
-                android:text="Content"
-                android:textColor="@android:color/white" />
+                android:id="@+id/sheet_content">
 
+                <fragment
+                    android:name="me.a0xcaff.forte.ui.view.NowPlayingFragment"
+                    android:id="@+id/sheet_content_fragment"
+                    tools:layout="@layout/fragment_now_playing"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </FrameLayout>
         </FrameLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>

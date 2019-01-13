@@ -1,5 +1,6 @@
 package me.a0xcaff.forte.ui.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -10,10 +11,15 @@ import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
 import me.a0xcaff.forte.ui.dataBinding
 
-// TODO: Better Connect Service Lifecycle
+// TODO: Better Connect Service Lifecycle View Model Maybe
+// TODO: Put Bottom Sheet State in View Model
+
+private const val EXTRA_TYPE_KEY = "type"
 
 class ViewActivity : AppCompatActivity() {
     val binding: ActivityViewBinding by dataBinding(R.layout.activity_view)
+
+    private val bottomSheetBehavior by lazy { BottomSheetBehavior.from(binding.sheet) }
 
     private lateinit var connection: PlaybackServiceConnection
 
@@ -44,9 +50,10 @@ class ViewActivity : AppCompatActivity() {
             lifecycle.registerOnUnbind { binding.playbackProgress.unregisterBinder() }
         }
 
-        val bottomSheetBehavior = BottomSheetBehavior.from(binding.sheet)
         val peek = binding.sheetPeek
         val content = binding.sheetContent
+
+        binding.sheetPeek.setOnClickListener { bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED }
 
         val peekHeightAsPercent = 1.0f / 8.0f
         bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
@@ -76,6 +83,33 @@ class ViewActivity : AppCompatActivity() {
                 }
             }
         })
+
+        handleIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) =
+        handleIntent(intent)
+
+    override fun onBackPressed() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_EXPANDED) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            return
+        }
+
+        return super.onBackPressed()
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val extras = Extras.from(intent.extras)
+
+        when (extras) {
+            is Extras.OpenNowPlaying -> {
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+            }
+            is Extras.NoArgs -> {
+                // Do nothing.
+            }
+        }
     }
 
     private fun updatePlaybackState(state: PlaybackState, playWhenReady: Boolean) {
@@ -95,4 +129,27 @@ class ViewActivity : AppCompatActivity() {
         super.onStop()
         connection.tryUnbind()
     }
+
+    sealed class Extras {
+        object OpenNowPlaying : Extras()
+        object NoArgs : Extras()
+
+        fun build(): Bundle =
+            when (this) {
+                is OpenNowPlaying -> Bundle().apply {
+                    putString(EXTRA_TYPE_KEY, OpenNowPlaying::javaClass.name)
+                }
+                is NoArgs -> Bundle()
+            }
+
+        companion object {
+            fun from(bundle: Bundle?): Extras =
+                when (bundle?.getString(EXTRA_TYPE_KEY)) {
+                    null -> NoArgs
+                    OpenNowPlaying::javaClass.name -> OpenNowPlaying
+                    else -> throw IllegalArgumentException("invalid bundle")
+                }
+        }
+    }
 }
+

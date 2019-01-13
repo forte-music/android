@@ -22,7 +22,9 @@ class NotificationMetadataProvider(
     }
 
     override fun createCurrentContentIntent(player: Player): PendingIntent {
-        val intent = Intent(context, ViewActivity::class.java)
+        val intent = Intent(context, ViewActivity::class.java).apply {
+            putExtras(ViewActivity.Extras.OpenNowPlaying.build())
+        }
         return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
