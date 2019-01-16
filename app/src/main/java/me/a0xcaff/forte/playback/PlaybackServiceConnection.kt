@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import me.a0xcaff.forte.ui.default
 
 sealed class ConnectionState {
     /**
@@ -33,33 +36,12 @@ sealed class ConnectionState {
     ) : ConnectionState()
 }
 
-class ObservableDataHolderImpl<TValue>(initialValue: TValue) : Event<TValue>(), ObservableDataHolder<TValue> {
-    init {
-        dispatch(initialValue)
-    }
-
-    override var value: TValue = initialValue
-        set(value) {
-            dispatch(value)
-            field = value
-        }
-
-    override fun observe(handler: (TValue) -> Unit) {
-        super.observe(handler)
-        handler(value)
-    }
-}
-
-interface ObservableDataHolder<TValue> : EventReceiver<TValue> {
-    val value: TValue
-}
-
 class PlaybackServiceConnection(
     private val context: Context
 ) {
-    private val _state = ObservableDataHolderImpl<ConnectionState>(ConnectionState.Disconnected)
+    private val _state = MutableLiveData<ConnectionState>().default(ConnectionState.Disconnected)
 
-    val state: ObservableDataHolder<ConnectionState>
+    val state: LiveData<ConnectionState>
         get() = _state
 
     private var connection: Connection? = null

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
@@ -28,7 +29,7 @@ class ViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         connection = PlaybackServiceConnection(this).apply {
-            state.observe { connectionState ->
+            state.observe(this@ViewActivity, Observer { connectionState ->
                 when (connectionState) {
                     is ConnectionState.Connected -> {
                         binding.playPause.setOnClickListener {
@@ -54,7 +55,7 @@ class ViewActivity : AppCompatActivity() {
                         connectionState.onUnbind.observe { binding.playbackProgress.unregisterBinder() }
                     }
                 }
-            }
+            })
         }
 
         val peek = binding.sheetPeek

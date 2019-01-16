@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -44,7 +45,7 @@ class QueueFragment : Fragment() {
         queueAdapter.itemTouchHelper.attachToRecyclerView(recyclerView)
 
         connection = PlaybackServiceConnection(context!!).apply {
-            state.observe { connectionState ->
+            state.observe(this@QueueFragment, Observer { connectionState ->
                 when (connectionState) {
                     is ConnectionState.Connected -> {
                         queueAdapter.queue = connectionState.binder.queue
@@ -53,7 +54,7 @@ class QueueFragment : Fragment() {
                         }
                     }
                 }
-            }
+            })
         }
 
         return binding.root
