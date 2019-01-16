@@ -11,10 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.a0xcaff.forte.databinding.FragmentQueueBinding
 import me.a0xcaff.forte.databinding.QueueItemBinding
-import me.a0xcaff.forte.playback.ConnectionState
-import me.a0xcaff.forte.playback.PlaybackServiceConnection
-import me.a0xcaff.forte.playback.Queue
-import me.a0xcaff.forte.playback.QueueItem
+import me.a0xcaff.forte.playback.*
+import org.koin.android.ext.android.inject
 
 // TODO: Dismissing Currently Playing Item Crashes
 // TODO: Better Styling
@@ -26,7 +24,7 @@ import me.a0xcaff.forte.playback.QueueItem
  * Displays a UI for viewing, modifying, and skipping to a specific position in a [Queue].
  */
 class QueueFragment : Fragment() {
-    private lateinit var connection: PlaybackServiceConnection
+    private val connection: PlaybackServiceConnection by inject()
 
     private lateinit var binding: FragmentQueueBinding
 
@@ -44,30 +42,18 @@ class QueueFragment : Fragment() {
 
         queueAdapter.itemTouchHelper.attachToRecyclerView(recyclerView)
 
-        connection = PlaybackServiceConnection(context!!).apply {
-            state.observe(this@QueueFragment, Observer { connectionState ->
-                when (connectionState) {
-                    is ConnectionState.Connected -> {
-                        queueAdapter.queue = connectionState.binder.queue
-                        connectionState.onUnbind.observe {
-                            queueAdapter.queue = null
-                        }
+        connection.state.observe(this, Observer { connectionState ->
+            when (connectionState) {
+                is ConnectionState.Connected -> {
+                    queueAdapter.queue = connectionState.binder.queue
+                    connectionState.onUnbind.observe {
+                        queueAdapter.queue = null
                     }
                 }
-            })
-        }
+            }
+        })
 
         return binding.root
-    }
-
-    override fun onStart() {
-        super.onStart()
-        connection.bind()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        connection.unbind()
     }
 }
 

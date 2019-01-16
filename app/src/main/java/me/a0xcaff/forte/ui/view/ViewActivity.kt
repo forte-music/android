@@ -12,6 +12,7 @@ import me.a0xcaff.forte.playback.ConnectionState
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
 import me.a0xcaff.forte.ui.dataBinding
+import org.koin.android.ext.android.inject
 
 // TODO: Better Connect Service Lifecycle View Model Maybe
 // TODO: Put Bottom Sheet State in View Model
@@ -23,40 +24,38 @@ class ViewActivity : AppCompatActivity() {
 
     private val bottomSheetBehavior by lazy { BottomSheetBehavior.from(binding.sheet) }
 
-    private lateinit var connection: PlaybackServiceConnection
+    private val connection: PlaybackServiceConnection by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        connection = PlaybackServiceConnection(this).apply {
-            state.observe(this@ViewActivity, Observer { connectionState ->
-                when (connectionState) {
-                    is ConnectionState.Connected -> {
-                        binding.playPause.setOnClickListener {
-                            connectionState.binder.playWhenReady = !connectionState.binder.playWhenReady
-                        }
-
-                        connectionState.onUnbind.observe {
-                            binding.playPause.setOnClickListener(null)
-                        }
-
-                        updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
-                        val observer: (Unit) -> Unit = {
-                            updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
-                        }
-
-                        connectionState.binder.playbackStateChanged.observe(observer)
-
-                        connectionState.onUnbind.observe {
-                            connectionState.binder.playbackStateChanged.unObserve(observer)
-                        }
-
-                        binding.playbackProgress.registerBinder(connectionState.binder)
-                        connectionState.onUnbind.observe { binding.playbackProgress.unregisterBinder() }
+        connection.state.observe(this, Observer { connectionState ->
+            when (connectionState) {
+                is ConnectionState.Connected -> {
+                    binding.playPause.setOnClickListener {
+                        connectionState.binder.playWhenReady = !connectionState.binder.playWhenReady
                     }
+
+                    connectionState.onUnbind.observe {
+                        binding.playPause.setOnClickListener(null)
+                    }
+
+                    updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
+                    val observer: (Unit) -> Unit = {
+                        updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
+                    }
+
+                    connectionState.binder.playbackStateChanged.observe(observer)
+
+                    connectionState.onUnbind.observe {
+                        connectionState.binder.playbackStateChanged.unObserve(observer)
+                    }
+
+                    binding.playbackProgress.registerBinder(connectionState.binder)
+                    connectionState.onUnbind.observe { binding.playbackProgress.unregisterBinder() }
                 }
-            })
-        }
+            }
+        })
 
         val peek = binding.sheetPeek
         val content = binding.sheetContent
@@ -126,16 +125,6 @@ class ViewActivity : AppCompatActivity() {
             state is PlaybackState.Ready && !playWhenReady -> binding.playPause.setPlayImage()
             else -> binding.playPause.clearImage()
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        connection.bind()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        connection.unbind()
     }
 
     sealed class Extras {

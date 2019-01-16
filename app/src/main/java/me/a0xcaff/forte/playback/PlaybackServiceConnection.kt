@@ -5,8 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.*
 import me.a0xcaff.forte.ui.default
 
 sealed class ConnectionState {
@@ -56,7 +55,7 @@ class PlaybackServiceConnection(
      */
     fun bind() {
         if (_state.value != ConnectionState.Disconnected) {
-            return
+            throw IllegalStateException("Can't bind already bound or binding service.")
         }
 
         val intent = Intent(context, PlaybackService::class.java)
@@ -108,4 +107,23 @@ class PlaybackServiceConnection(
             throw IllegalStateException("Unexpected null binding")
         }
     }
+
+    companion object {
+        fun withProcessObserver(context: Context) =
+            PlaybackServiceConnection(context).also {
+                attachProcessObserver(it)
+            }
+    }
+}
+
+fun attachProcessObserver(playbackServiceConnection: PlaybackServiceConnection) {
+    ProcessLifecycleOwner.get().lifecycle.addObserver(object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_START)
+        fun onApplicationStart() =
+            playbackServiceConnection.bind()
+
+        @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+        fun onApplicationStop() =
+            playbackServiceConnection.unbind()
+    })
 }
