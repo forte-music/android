@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
+import me.a0xcaff.forte.playback.ConnectionState
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
 import me.a0xcaff.forte.ui.dataBinding
@@ -26,28 +27,34 @@ class ViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        connection = PlaybackServiceConnection(this) { service, lifecycle ->
-            binding.playPause.setOnClickListener {
-                service.playWhenReady = !service.playWhenReady
+        connection = PlaybackServiceConnection(this).apply {
+            state.observe { connectionState ->
+                when (connectionState) {
+                    is ConnectionState.Connected -> {
+                        binding.playPause.setOnClickListener {
+                            connectionState.binder.playWhenReady = !connectionState.binder.playWhenReady
+                        }
+
+                        connectionState.onUnbind.observe {
+                            binding.playPause.setOnClickListener(null)
+                        }
+
+                        updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
+                        val observer: (Unit) -> Unit = {
+                            updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
+                        }
+
+                        connectionState.binder.playbackStateChanged.observe(observer)
+
+                        connectionState.onUnbind.observe {
+                            connectionState.binder.playbackStateChanged.unObserve(observer)
+                        }
+
+                        binding.playbackProgress.registerBinder(connectionState.binder)
+                        connectionState.onUnbind.observe { binding.playbackProgress.unregisterBinder() }
+                    }
+                }
             }
-
-            lifecycle.registerOnUnbind {
-                binding.playPause.setOnClickListener(null)
-            }
-
-            updatePlaybackState(service.state, service.playWhenReady)
-            val observer: (Unit) -> Unit = {
-                updatePlaybackState(service.state, service.playWhenReady)
-            }
-
-            service.playbackStateChanged.observe(observer)
-
-            lifecycle.registerOnUnbind {
-                service.playbackStateChanged.unObserve(observer)
-            }
-
-            binding.playbackProgress.registerBinder(service)
-            lifecycle.registerOnUnbind { binding.playbackProgress.unregisterBinder() }
         }
 
         val peek = binding.sheetPeek
@@ -127,7 +134,7 @@ class ViewActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        connection.tryUnbind()
+        connection.unbind()
     }
 
     sealed class Extras {

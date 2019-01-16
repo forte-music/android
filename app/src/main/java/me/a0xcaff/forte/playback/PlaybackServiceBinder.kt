@@ -130,7 +130,7 @@ interface EventReceiver<T> {
     fun unObserve(handle: (T) -> Unit)
 }
 
-class Event<T> : EventReceiver<T> {
+open class Event<T> : EventReceiver<T> {
     private val handlers = arrayListOf<((T) -> Unit)>()
     override fun observe(handler: (T) -> Unit) {
         handlers.add(handler)
@@ -142,5 +142,9 @@ class Event<T> : EventReceiver<T> {
 
     fun dispatch(value: T) {
         handlers.forEach { it(value) }
+    }
+
+    fun unObserveAll() {
+        handlers.removeAll { true }
     }
 }

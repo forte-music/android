@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import me.a0xcaff.forte.databinding.FragmentQueueBinding
 import me.a0xcaff.forte.databinding.QueueItemBinding
+import me.a0xcaff.forte.playback.ConnectionState
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.Queue
 import me.a0xcaff.forte.playback.QueueItem
@@ -42,10 +43,16 @@ class QueueFragment : Fragment() {
 
         queueAdapter.itemTouchHelper.attachToRecyclerView(recyclerView)
 
-        connection = PlaybackServiceConnection(context!!) { service, lifecycle ->
-            queueAdapter.queue = service.queue
-            lifecycle.registerOnUnbind {
-                queueAdapter.queue = null
+        connection = PlaybackServiceConnection(context!!).apply {
+            state.observe { connectionState ->
+                when (connectionState) {
+                    is ConnectionState.Connected -> {
+                        queueAdapter.queue = connectionState.binder.queue
+                        connectionState.onUnbind.observe {
+                            queueAdapter.queue = null
+                        }
+                    }
+                }
             }
         }
 
@@ -59,7 +66,7 @@ class QueueFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        connection.tryUnbind()
+        connection.unbind()
     }
 }
 
