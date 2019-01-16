@@ -13,9 +13,9 @@ import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.playback.PlaybackState
 import me.a0xcaff.forte.ui.dataBinding
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 // TODO: Better Connect Service Lifecycle View Model Maybe
-// TODO: Put Bottom Sheet State in View Model
 
 private const val EXTRA_TYPE_KEY = "type"
 
@@ -25,6 +25,8 @@ class ViewActivity : AppCompatActivity() {
     private val bottomSheetBehavior by lazy { BottomSheetBehavior.from(binding.sheet) }
 
     private val connection: PlaybackServiceConnection by inject()
+
+    private val bottomSheetViewModel: BottomSheetViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +62,9 @@ class ViewActivity : AppCompatActivity() {
         val peek = binding.sheetPeek
         val content = binding.sheetContent
 
+        updateBottomSheetState(bottomSheetViewModel.state.value!!)
+        bottomSheetViewModel.state.observe(this, Observer { updateBottomSheetState(it) })
+
         binding.sheetPeek.setOnClickListener { bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED }
 
         val peekHeightAsPercent = 1.0f / 8.0f
@@ -72,26 +77,35 @@ class ViewActivity : AppCompatActivity() {
             }
 
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                when (newState) {
-                    BottomSheetBehavior.STATE_COLLAPSED ->
-                        content.visibility = View.GONE
-                    BottomSheetBehavior.STATE_EXPANDED ->
-                        peek.visibility = View.GONE
-                    BottomSheetBehavior.STATE_HIDDEN -> {
-                        peek.visibility = View.GONE
-                        content.visibility = View.GONE
-                    }
-                    BottomSheetBehavior.STATE_DRAGGING,
-                    BottomSheetBehavior.STATE_SETTLING,
-                    BottomSheetBehavior.STATE_HALF_EXPANDED -> {
-                        peek.visibility = View.VISIBLE
-                        content.visibility = View.VISIBLE
-                    }
-                }
+                bottomSheetViewModel.state.value = newState
             }
         })
 
         handleIntent(intent)
+    }
+
+    private fun updateBottomSheetState(newState: Int) {
+        val peek = binding.sheetPeek
+        val content = binding.sheetContent
+
+        bottomSheetBehavior.state = newState
+
+        when (newState) {
+            BottomSheetBehavior.STATE_COLLAPSED ->
+                content.visibility = View.GONE
+            BottomSheetBehavior.STATE_EXPANDED ->
+                peek.visibility = View.GONE
+            BottomSheetBehavior.STATE_HIDDEN -> {
+                peek.visibility = View.GONE
+                content.visibility = View.GONE
+            }
+            BottomSheetBehavior.STATE_DRAGGING,
+            BottomSheetBehavior.STATE_SETTLING,
+            BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+                peek.visibility = View.VISIBLE
+                content.visibility = View.VISIBLE
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) =
