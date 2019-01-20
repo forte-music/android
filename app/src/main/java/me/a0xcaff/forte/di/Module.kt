@@ -11,8 +11,8 @@ import me.a0xcaff.forte.ServerValidatorImpl
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.ui.connect.ConnectActivityViewModel
 import me.a0xcaff.forte.ui.view.BottomSheetViewModel
+import me.a0xcaff.forte.ui.view.PlaybackViewModel
 import okhttp3.OkHttpClient
-import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.ext.koin.viewModel
 import org.koin.dsl.module.module
@@ -30,9 +30,12 @@ val Module = module {
             .build()
     }
     single { ServerValidatorImpl(get()) as ServerValidator }
-    viewModel { ConnectActivityViewModel(serverValidator = get(), config = get()) }
-    viewModel { BottomSheetViewModel() }
     single { ConfigImpl.from(androidContext()) as Config }
+
     single { PlaybackServiceConnection.withProcessObserver(androidContext()) }
-    factory { OkHttpDataSourceFactory(get<OkHttpClient>(), "Forte Music Android") }
+    single { OkHttpDataSourceFactory(get<OkHttpClient>(), "Forte Music Android") }
+
+    viewModel { ConnectActivityViewModel(serverValidator = get(), config = get()) }
+    viewModel { BottomSheetViewModel(get()) }
+    viewModel { PlaybackViewModel(get()) }
 }

@@ -10,6 +10,7 @@ import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
 import me.a0xcaff.forte.R
+import me.a0xcaff.forte.playback.EventReceiver
 import me.a0xcaff.forte.playback.PlaybackServiceBinder
 
 // TODO: Display Buffering State
@@ -41,10 +42,12 @@ class PlaybackProgressBar @JvmOverloads constructor(
     private var bufferedProgress = styled.getFloat(R.styleable.PlaybackProgressBar_buffered_progress, 0.0f)
     private var playedProgress = styled.getFloat(R.styleable.PlaybackProgressBar_played_progress, 0.0f)
 
-    fun registerBinder(service: PlaybackServiceBinder) {
+    fun registerBinder(service: PlaybackServiceBinder, onUnbind: EventReceiver<Unit>) {
         service.playbackStateChanged.observe(this::handlePlaybackStateChanged)
         binder = service
         postUpdateOnAnimation()
+
+        onUnbind.observe { unregisterBinder() }
     }
 
     fun unregisterBinder() {

@@ -2,110 +2,51 @@ package me.a0xcaff.forte.ui.view
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
 import me.a0xcaff.forte.playback.ConnectionState
-import me.a0xcaff.forte.playback.PlaybackServiceConnection
-import me.a0xcaff.forte.playback.PlaybackState
 import me.a0xcaff.forte.ui.dataBinding
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
-
-// TODO: Better Connect Service Lifecycle View Model Maybe
 
 private const val EXTRA_TYPE_KEY = "type"
 
 class ViewActivity : AppCompatActivity() {
-    val binding: ActivityViewBinding by dataBinding(R.layout.activity_view)
-
-    private val bottomSheetBehavior by lazy { BottomSheetBehavior.from(binding.sheet) }
-
-    private val connection: PlaybackServiceConnection by inject()
+    private val binding: ActivityViewBinding by dataBinding(R.layout.activity_view)
 
     private val bottomSheetViewModel: BottomSheetViewModel by viewModel()
+
+    private val playbackViewModel: PlaybackViewModel by viewModel()
+
+    private lateinit var bottomSheetBehavior: PlaybackBottomSheet
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        connection.state.observe(this, Observer { connectionState ->
-            when (connectionState) {
-                is ConnectionState.Connected -> {
-                    binding.playPause.setOnClickListener {
-                        connectionState.binder.playWhenReady = !connectionState.binder.playWhenReady
-                    }
+        bottomSheetBehavior = PlaybackBottomSheet(
+            binding,
+            resources.getDimension(R.dimen.view_bottom_sheet_peek).toInt(),
+            bottomSheetViewModel.userState::setValue
+        )
 
-                    connectionState.onUnbind.observe {
-                        binding.playPause.setOnClickListener(null)
-                    }
-
-                    updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
-                    val observer: (Unit) -> Unit = {
-                        updatePlaybackState(connectionState.binder.state, connectionState.binder.playWhenReady)
-                    }
-
-                    connectionState.binder.playbackStateChanged.observe(observer)
-
-                    connectionState.onUnbind.observe {
-                        connectionState.binder.playbackStateChanged.unObserve(observer)
-                    }
-
-                    binding.playbackProgress.registerBinder(connectionState.binder)
-                    connectionState.onUnbind.observe { binding.playbackProgress.unregisterBinder() }
-                }
-            }
-        })
-
-        val peek = binding.sheetPeek
-        val content = binding.sheetContent
-
-        updateBottomSheetState(bottomSheetViewModel.state.value!!)
-        bottomSheetViewModel.state.observe(this, Observer { updateBottomSheetState(it) })
+        bottomSheetBehavior.state = bottomSheetViewModel.state.value!!
+        bottomSheetViewModel.state.observe(this, Observer(bottomSheetBehavior::state::set))
 
         binding.sheetPeek.setOnClickListener { bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED }
 
-        val peekHeightAsPercent = 1.0f / 8.0f
-        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                val progress = Math.min(slideOffset / peekHeightAsPercent, 1.0f)
-
-                content.alpha = progress
-                peek.alpha = 1 - progress
-            }
-
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                bottomSheetViewModel.state.value = newState
+        playbackViewModel.connection.state.observe(this, Observer { connectionState ->
+            when (connectionState) {
+                is ConnectionState.Connected ->
+                    binding.playbackProgress.registerBinder(connectionState.binder, connectionState.onUnbind)
             }
         })
 
+        binding.playPause.setOnClickListener { playbackViewModel.togglePlayWhenReady() }
+        playbackViewModel.playWhenReady.observe(this, Observer(binding.playPause::updatePlaybackState))
+
         handleIntent(intent)
-    }
-
-    private fun updateBottomSheetState(newState: Int) {
-        val peek = binding.sheetPeek
-        val content = binding.sheetContent
-
-        bottomSheetBehavior.state = newState
-
-        when (newState) {
-            BottomSheetBehavior.STATE_COLLAPSED ->
-                content.visibility = View.GONE
-            BottomSheetBehavior.STATE_EXPANDED ->
-                peek.visibility = View.GONE
-            BottomSheetBehavior.STATE_HIDDEN -> {
-                peek.visibility = View.GONE
-                content.visibility = View.GONE
-            }
-            BottomSheetBehavior.STATE_DRAGGING,
-            BottomSheetBehavior.STATE_SETTLING,
-            BottomSheetBehavior.STATE_HALF_EXPANDED -> {
-                peek.visibility = View.VISIBLE
-                content.visibility = View.VISIBLE
-            }
-        }
     }
 
     override fun onNewIntent(intent: Intent) =
@@ -130,14 +71,6 @@ class ViewActivity : AppCompatActivity() {
             is Extras.NoArgs -> {
                 // Do nothing.
             }
-        }
-    }
-
-    private fun updatePlaybackState(state: PlaybackState, playWhenReady: Boolean) {
-        when {
-            state is PlaybackState.Ready && playWhenReady -> binding.playPause.setPauseImage()
-            state is PlaybackState.Ready && !playWhenReady -> binding.playPause.setPlayImage()
-            else -> binding.playPause.clearImage()
         }
     }
 

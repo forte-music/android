@@ -130,6 +130,11 @@ interface EventReceiver<T> {
     fun unObserve(handle: (T) -> Unit)
 }
 
+fun <T> EventReceiver<T>.observeUntil(onUnbind: EventReceiver<Unit>, handler: (T) -> Unit) {
+    observe(handler)
+    onUnbind.observe { unObserve(handler) }
+}
+
 open class Event<T> : EventReceiver<T> {
     private val handlers = arrayListOf<((T) -> Unit)>()
     override fun observe(handler: (T) -> Unit) {
