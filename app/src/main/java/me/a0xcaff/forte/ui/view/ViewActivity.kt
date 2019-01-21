@@ -31,7 +31,6 @@ class ViewActivity : AppCompatActivity() {
             bottomSheetViewModel.userState::setValue
         )
 
-        bottomSheetBehavior.state = bottomSheetViewModel.state.value!!
         bottomSheetViewModel.state.observe(this, Observer(bottomSheetBehavior::state::set))
 
         binding.sheetPeek.setOnClickListener { bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED }
