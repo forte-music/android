@@ -23,7 +23,6 @@ sealed class PlaybackState {
 }
 
 // TODO: Playing From Info
-// TODO: Remove get() = ...
 interface PlaybackServiceBinder {
     /**
      * Current playback state.
@@ -100,8 +99,7 @@ class PlaybackServiceBinderImpl(
         }
 
     private val _playbackStateChanged = Event<Unit>()
-    override val playbackStateChanged: EventReceiver<Unit>
-        get() = _playbackStateChanged
+    override val playbackStateChanged: EventReceiver<Unit> = _playbackStateChanged
 
     private val listener = Listener()
 
@@ -109,8 +107,7 @@ class PlaybackServiceBinderImpl(
         get() = NowPlayingInfoImpl()
 
     private val _queuePositionChanged = Event<Unit>()
-    override val queuePositionChanged: EventReceiver<Unit>
-        get() = _queuePositionChanged
+    override val queuePositionChanged: EventReceiver<Unit> = _queuePositionChanged
 
     override val hasNext: Boolean
         get() = player.hasNext()

@@ -80,8 +80,7 @@ interface MutableObservableList<T> : ObservableList<T> {
 
 class Queue : BaseObservableList<QueueItem>(), MutableObservableList<QueueItem> {
     private val _items: MutableList<QueueItem> = mutableListOf()
-    override val items: List<QueueItem>
-        get() = _items
+    override val items: List<QueueItem> = _items
 
     override fun remove(idx: Int): QueueItem {
         val removed = _items.removeAt(idx)

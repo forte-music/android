@@ -39,9 +39,7 @@ class PlaybackServiceConnection(
     private val context: Context
 ) {
     private val _state = MutableLiveData<ConnectionState>().default(ConnectionState.Disconnected)
-
-    val state: LiveData<ConnectionState>
-        get() = _state
+    val state: LiveData<ConnectionState> = _state
 
     private var connection: Connection? = null
 

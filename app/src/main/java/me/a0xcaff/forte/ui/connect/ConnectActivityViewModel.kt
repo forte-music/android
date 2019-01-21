@@ -28,32 +28,26 @@ class ConnectActivityViewModel(
         get() = parentContext + scopeJob
 
     private val _url = MutableLiveData<String>().default("")
+    val url: LiveData<String> = _url
 
     private val _validationError = MutableLiveData<String?>().default(null)
+    val validationError: LiveData<String?> = _validationError
 
     private val _canConnect = MutableLiveData<Boolean>().default(false)
+    val canConnect: LiveData<Boolean> = _canConnect
 
     private val _isLoading = MutableLiveData<Boolean>().default(false)
+    val isLoading: LiveData<Boolean> = _isLoading
 
     private val _error = MutableLiveData<String>().default("")
+    val error: LiveData<String> = _error
 
     private val _successfulUrlFound = MutableLiveData<Event<Unit>>()
+    val sucessfulUrlFound: LiveData<Event<Unit>> = _successfulUrlFound
 
     private var responseJob: Job? = null
 
-    val url: LiveData<String> get() = _url
-
-    val validationError: LiveData<String?> get() = _validationError
-
-    val canConnect: LiveData<Boolean> get() = _canConnect
-
-    val isLoading: LiveData<Boolean> get() = _isLoading
-
-    val error: LiveData<String> get() = _error
-
     private val httpUrl get() = HttpUrl.parse(url.value!!)
-
-    val sucessfulUrlFound: LiveData<Event<Unit>> get() = _successfulUrlFound
 
     fun urlChanged(newValue: String) {
         _error.value = ""
