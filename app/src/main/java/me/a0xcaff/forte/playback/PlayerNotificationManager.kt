@@ -18,6 +18,7 @@ import com.google.android.exoplayer2.Timeline
 import com.google.android.exoplayer2.util.Util
 import kotlinx.coroutines.*
 import me.a0xcaff.forte.R
+import me.a0xcaff.forte.previousOrBeginning
 
 class PlayerNotificationManager(
     private val player: Player,
@@ -202,14 +203,7 @@ class PlayerNotificationManager(
                 ACTION_PLAY -> player.playWhenReady = true
                 ACTION_PAUSE -> player.playWhenReady = false
                 ACTION_NEXT -> player.next()
-                ACTION_PREVIOUS -> {
-                    player.previousWindowIndex
-                    if (player.hasPrevious()) {
-                        player.previous()
-                    } else if (player.isCurrentWindowSeekable) {
-                        player.seekTo(0)
-                    }
-                }
+                ACTION_PREVIOUS -> player.previousOrBeginning()
                 ACTION_CANCEL -> stopNotification()
             }
         }
