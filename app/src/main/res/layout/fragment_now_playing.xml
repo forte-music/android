@@ -41,8 +41,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/guideline"
             app:layout_constraintVertical_chainStyle="spread_inside"
-            tools:src="@tools:sample/backgrounds/scenic"
-            tools:srcCompat="@sample/artwork" />
+            tools:src="@tools:sample/backgrounds/scenic" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/metadata_container"
@@ -94,6 +93,7 @@
             android:background="@android:color/transparent"
             android:contentDescription="@string/exo_controls_previous_description"
             android:src="@drawable/exo_controls_previous"
+            android:tint="@drawable/selector_touch"
             android:layout_marginStart="24dp"
             app:layout_constraintBottom_toBottomOf="@+id/play_pause"
             app:layout_constraintEnd_toStartOf="@+id/play_pause"
@@ -126,6 +126,7 @@
             android:layout_height="58dp"
             android:background="@android:color/transparent"
             android:src="@drawable/exo_icon_next"
+            android:tint="@drawable/selector_touch"
             android:contentDescription="@string/exo_controls_next_description"
             android:layout_marginEnd="24dp"
             app:layout_constraintBottom_toBottomOf="@+id/play_pause"

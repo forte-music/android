@@ -2,6 +2,8 @@ package me.a0xcaff.forte.playback
 
 import android.os.Binder
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.Timeline
+import me.a0xcaff.forte.previousOrBeginning
 
 sealed class PlaybackState {
     object Idle : PlaybackState()
@@ -20,6 +22,8 @@ sealed class PlaybackState {
     }
 }
 
+// TODO: Playing From Info
+// TODO: Remove get() = ...
 interface PlaybackServiceBinder {
     /**
      * Current playback state.
@@ -47,6 +51,14 @@ interface PlaybackServiceBinder {
      * The item currently playing. Null if there is none.
      */
     val nowPlaying: NowPlayingInfo?
+
+    val queuePositionChanged: EventReceiver<Unit>
+
+    val hasNext: Boolean
+
+    fun next()
+
+    fun previous()
 }
 
 interface NowPlayingInfo {
@@ -56,7 +68,7 @@ interface NowPlayingInfo {
     val item: QueueItem
 
     /**
-     * The current progress of the track as number of milliseconds played. Poll this value progress updates.
+     * The current progress of the track as number of milliseconds played. Poll this value for progress updates.
      */
     val currentPosition: Long
 
@@ -96,6 +108,17 @@ class PlaybackServiceBinderImpl(
     override val nowPlaying: NowPlayingInfo?
         get() = NowPlayingInfoImpl()
 
+    private val _queuePositionChanged = Event<Unit>()
+    override val queuePositionChanged: EventReceiver<Unit>
+        get() = _queuePositionChanged
+
+    override val hasNext: Boolean
+        get() = player.hasNext()
+
+    override fun next() = player.next()
+
+    override fun previous() = player.previousOrBeginning()
+
     init {
         player.addListener(listener)
     }
@@ -107,6 +130,14 @@ class PlaybackServiceBinderImpl(
     inner class Listener : Player.EventListener {
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             _playbackStateChanged.dispatch(Unit)
+        }
+
+        override fun onPositionDiscontinuity(reason: Int) {
+            _queuePositionChanged.dispatch(Unit)
+        }
+
+        override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
+            _queuePositionChanged.dispatch(Unit)
         }
     }
 
@@ -133,6 +164,11 @@ interface EventReceiver<T> {
 fun <T> EventReceiver<T>.observeUntil(onUnbind: EventReceiver<Unit>, handler: (T) -> Unit) {
     observe(handler)
     onUnbind.observe { unObserve(handler) }
+}
+
+fun EventReceiver<Unit>.observeNowAndUntil(onUnbind: EventReceiver<Unit>, handler: (Unit) -> Unit) {
+    handler(Unit)
+    observeUntil(onUnbind, handler)
 }
 
 open class Event<T> : EventReceiver<T> {
