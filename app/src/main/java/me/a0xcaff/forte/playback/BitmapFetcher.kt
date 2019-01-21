@@ -24,12 +24,15 @@ fun <T> returnNowOrLater(scope: CoroutineScope, source: Deferred<T>, callback: (
  * Handles fetching bitmaps. The latest bitmap is cached in a [SingleValueCache]. Used for notification and media
  * session where only one image should be loaded at a time.
  */
-class BitmapFetcher(private val picasso: Picasso) {
+class BitmapFetcher(
+    private val picasso: Picasso,
+    private val transform: RequestCreator.() -> Unit
+) {
     private val singleValueCache = SingleValueCache<String, Deferred<Bitmap>>()
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
-    fun getFor(url: String, transform: RequestCreator.() -> Unit, callback: (Bitmap) -> Unit): Bitmap? {
+    fun getFor(url: String, callback: (Bitmap) -> Unit): Bitmap? {
         val deferred = singleValueCache.computeIfAbsent(url) {
             coroutineScope.async { picasso.get(url, transform) }
         }

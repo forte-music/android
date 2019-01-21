@@ -16,6 +16,7 @@ import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.util.NotificationUtil
 import com.squareup.picasso.Picasso
 import me.a0xcaff.forte.R
+import org.koin.android.ext.android.get
 import org.koin.android.ext.android.inject
 
 const val NOW_PLAYING_NOTIFICATION_ID = 0xcaff
@@ -37,9 +38,9 @@ class PlaybackService : Service() {
 
     private val upstreamDataSourceFactory: OkHttpDataSourceFactory by inject()
 
-    private val picasso: Picasso by inject()
+    private val notificationBitmapFetcher: BitmapFetcher = get("Notification BitmapFetcher")
 
-    private val bitmapFetcher = BitmapFetcher(picasso)
+    private val mediaSessionBitmapFetcher: BitmapFetcher = get("MediaSession BitmapFetcher")
 
     override fun onCreate() {
         super.onCreate()
@@ -75,7 +76,7 @@ class PlaybackService : Service() {
         val mediaDescriptionAdapter = NotificationMetadataProvider(
             queue,
             context,
-            bitmapFetcher
+            notificationBitmapFetcher
         )
 
         NotificationUtil.createNotificationChannel(
@@ -97,7 +98,7 @@ class PlaybackService : Service() {
         mediaSessionConnector = MediaSessionMetadataProvider.withConnector(
             mediaSession,
             queue,
-            bitmapFetcher
+            mediaSessionBitmapFetcher
         ).apply {
             setPlayer(player, null)
         }
@@ -134,7 +135,8 @@ class PlaybackService : Service() {
         binder.release()
         playerNotificationManager.release()
         mediaSession.release()
-        bitmapFetcher.release()
+        notificationBitmapFetcher.release()
+        mediaSessionBitmapFetcher.release()
         mediaSessionConnector.setPlayer(null, null)
         player.release()
     }

@@ -4,10 +4,8 @@ import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
-import me.a0xcaff.forte.Config
-import me.a0xcaff.forte.ConfigImpl
-import me.a0xcaff.forte.ServerValidator
-import me.a0xcaff.forte.ServerValidatorImpl
+import me.a0xcaff.forte.*
+import me.a0xcaff.forte.playback.BitmapFetcher
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.ui.connect.ConnectActivityViewModel
 import me.a0xcaff.forte.ui.view.BottomSheetViewModel
@@ -34,6 +32,20 @@ val Module = module {
 
     single { PlaybackServiceConnection.withProcessObserver(androidContext()) }
     single { OkHttpDataSourceFactory(get<OkHttpClient>(), "Forte Music Android") }
+
+    single("MediaSession BitmapFetcher") {
+        BitmapFetcher(get()) {
+            resizeDimen(R.dimen.media_session_max_artwork_size, R.dimen.media_session_max_artwork_size)
+            centerInside()
+        }
+    }
+
+    single("Notification BitmapFetcher") {
+        BitmapFetcher(get()) {
+            resizeDimen(R.dimen.notification_large_artwork_size, R.dimen.notification_large_artwork_size)
+            centerInside()
+        }
+    }
 
     viewModel { ConnectActivityViewModel(serverValidator = get(), config = get()) }
     viewModel { BottomSheetViewModel(get()) }

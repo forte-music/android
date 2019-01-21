@@ -4,7 +4,6 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import me.a0xcaff.forte.R
 
 class MediaSessionMetadataProvider(
     private val queue: Queue,
@@ -17,15 +16,9 @@ class MediaSessionMetadataProvider(
                 return@apply
             }
 
-            val bitmap = fetcher.getFor(
-                playing.album.artworkUrl,
-                {
-                    resizeDimen(R.dimen.media_session_max_artwork_size, R.dimen.media_session_max_artwork_size)
-                    centerInside()
-                }, {
-                    connector!!.invalidateMediaSessionMetadata()
-                }
-            )
+            val bitmap = fetcher.getFor(playing.album.artworkUrl) {
+                connector!!.invalidateMediaSessionMetadata()
+            }
 
             putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
             putString(MediaMetadataCompat.METADATA_KEY_TITLE, playing.title)
