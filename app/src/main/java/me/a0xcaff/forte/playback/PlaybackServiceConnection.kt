@@ -6,7 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.*
-import me.a0xcaff.forte.ui.default
+import me.a0xcaff.forte.default
 
 sealed class ConnectionState {
     /**

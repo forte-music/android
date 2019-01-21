@@ -13,7 +13,7 @@ import me.a0xcaff.forte.Failure
 import me.a0xcaff.forte.ServerValidator
 import me.a0xcaff.forte.Success
 import me.a0xcaff.forte.ui.Event
-import me.a0xcaff.forte.ui.default
+import me.a0xcaff.forte.default
 import okhttp3.HttpUrl
 import kotlin.coroutines.CoroutineContext
 

@@ -2,6 +2,7 @@ package me.a0xcaff.forte
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 
 class MergedLiveData<T>(
@@ -33,3 +34,5 @@ fun <X, Y> LiveData<X>.map(mapFn: (X) -> Y): LiveData<Y> =
 
 fun <X, Y> LiveData<X>.switchMap(mapFn: (X) -> LiveData<Y>?): LiveData<Y> =
     Transformations.switchMap(this, mapFn)
+
+fun <T> MutableLiveData<T>.default(initialValue: T) = apply { setValue(initialValue) }

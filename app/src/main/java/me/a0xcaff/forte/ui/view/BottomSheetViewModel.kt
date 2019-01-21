@@ -5,10 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.MergedLiveData
+import me.a0xcaff.forte.default
 import me.a0xcaff.forte.map
 import me.a0xcaff.forte.playback.ConnectionState
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
-import me.a0xcaff.forte.ui.default
 
 class BottomSheetViewModel(connection: PlaybackServiceConnection) : ViewModel() {
     val userState = MutableLiveData<@BottomSheetBehavior.State Int>().default(BottomSheetBehavior.STATE_HIDDEN)
