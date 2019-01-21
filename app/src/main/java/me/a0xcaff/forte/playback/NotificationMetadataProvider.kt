@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import com.google.android.exoplayer2.Player
-import me.a0xcaff.forte.R
 import me.a0xcaff.forte.ui.view.ViewActivity
 
 // TODO: Only Show Notification When Queue Is Non-Empty
