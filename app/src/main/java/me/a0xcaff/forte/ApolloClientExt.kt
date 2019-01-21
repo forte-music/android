@@ -27,3 +27,5 @@ fun <T> ApolloCall<T>.executeAsync(): ReceiveChannel<Response<T>> {
 
     return channel
 }
+
+// TODO: Execute Async Once
