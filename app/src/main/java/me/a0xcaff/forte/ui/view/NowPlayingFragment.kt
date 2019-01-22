@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import com.squareup.picasso.Picasso
 import me.a0xcaff.forte.databinding.FragmentNowPlayingBinding
+import me.a0xcaff.forte.playback.Artist
+import me.a0xcaff.forte.playback.ConnectionState
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
@@ -35,9 +37,10 @@ class NowPlayingFragment : Fragment() {
                 .into(binding.artwork)
 
             binding.album.text = it.item.album.title
-            binding.artist.text = it.item.artists.joinToString(", ") { it.name }
+            binding.artist.text = it.item.artists.joinToString(", ", transform = Artist::name::get)
         })
 
+        binding.currentTime.register(viewModel.connection.state, this)
         return binding.root
     }
 }

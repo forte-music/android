@@ -9,9 +9,10 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.StyleableRes
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
 import me.a0xcaff.forte.R
-import me.a0xcaff.forte.playback.EventReceiver
-import me.a0xcaff.forte.playback.PlaybackServiceBinder
+import me.a0xcaff.forte.playback.ConnectionState
 
 // TODO: Display Buffering State
 
@@ -28,7 +29,6 @@ class PlaybackProgressBar @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
-    private var binder: PlaybackServiceBinder? = null
     private val styled: TypedArray? = context.obtainStyledAttributes(attrs, R.styleable.PlaybackProgressBar)
 
     private val bufferedPaint = Paint().apply {
@@ -42,19 +42,18 @@ class PlaybackProgressBar @JvmOverloads constructor(
     private var bufferedProgress = styled.getFloat(R.styleable.PlaybackProgressBar_buffered_progress, 0.0f)
     private var playedProgress = styled.getFloat(R.styleable.PlaybackProgressBar_played_progress, 0.0f)
 
-    fun registerBinder(service: PlaybackServiceBinder, onUnbind: EventReceiver<Unit>) {
-        service.playbackStateChanged.observe(this::handlePlaybackStateChanged)
-        binder = service
-        postUpdateOnAnimation()
+    private val manager = ServiceRegistrationManager(
+        onBound = { service ->
+            service.playbackStateChanged.observe(this::handlePlaybackStateChanged)
+            postUpdateOnAnimation()
+        },
+        onUnbound = { service ->
+            service.playbackStateChanged.unObserve(this::handlePlaybackStateChanged)
+        }
+    )
 
-        onUnbind.observe { unregisterBinder() }
-    }
-
-    fun unregisterBinder() {
-        val activeBinder = mustBeBound()
-        activeBinder.playbackStateChanged.unObserve(this::handlePlaybackStateChanged)
-        binder = null
-    }
+    fun register(liveData: LiveData<ConnectionState>, lifecycleOwner: LifecycleOwner) =
+        manager.register(liveData, lifecycleOwner)
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
@@ -73,19 +72,11 @@ class PlaybackProgressBar @JvmOverloads constructor(
         )
     }
 
-    private fun mustBeBound(): PlaybackServiceBinder =
-        binder ?: throw IllegalStateException("the PlaybackProgressBar must be registered first.")
-
     @Suppress("UNUSED_PARAMETER")
     private fun handlePlaybackStateChanged(unit: Unit) = handlePlaybackStateChanged()
 
-    private fun isActive(): Boolean {
-        val activeBinder = binder
-        return activeBinder != null
-    }
-
     private fun handlePlaybackStateChanged() {
-        if (isActive()) {
+        if (manager.isBound) {
             postUpdateOnAnimation()
         }
     }
@@ -95,14 +86,14 @@ class PlaybackProgressBar @JvmOverloads constructor(
             updateProgress()
             invalidate()
 
-            if (isActive()) {
+            if (manager.isBound) {
                 postUpdateOnAnimation()
             }
         }
     }
 
     private fun updateProgress() {
-        val activeBinder = binder
+        val activeBinder = manager.binder
         val nowPlaying = activeBinder?.nowPlaying
         if (nowPlaying == null || nowPlaying.duration == 0L) {
             playedProgress = 0.0f

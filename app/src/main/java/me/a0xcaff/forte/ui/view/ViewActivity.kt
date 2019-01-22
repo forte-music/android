@@ -35,12 +35,7 @@ class ViewActivity : AppCompatActivity() {
 
         binding.sheetPeek.setOnClickListener { bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED }
 
-        playbackViewModel.connection.state.observe(this, Observer { connectionState ->
-            when (connectionState) {
-                is ConnectionState.Connected ->
-                    binding.playbackProgress.registerBinder(connectionState.binder, connectionState.onUnbind)
-            }
-        })
+        binding.playbackProgress.register(playbackViewModel.connection.state, this)
 
         binding.playPause.setOnClickListener { playbackViewModel.togglePlayWhenReady() }
         playbackViewModel.playWhenReady.observe(this, Observer(binding.playPause::updatePlaybackState))
