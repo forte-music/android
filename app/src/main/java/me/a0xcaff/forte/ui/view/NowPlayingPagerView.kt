@@ -59,7 +59,10 @@ class NowPlayingPagerView @JvmOverloads constructor(
     private fun handleQueuePositionChangedFromService() {
         // TODO: Handle Edge Cases
         val service = manager.mustBeBound()
-        layoutManager.smoothScrollToPosition(this, RecyclerView.State(), service.nowPlayingIndex)
+
+        if (!layoutManager.isSmoothScrolling) {
+            layoutManager.smoothScrollToPosition(this, RecyclerView.State(), service.nowPlayingIndex)
+        }
     }
 
     inner class ScrollListener : RecyclerView.OnScrollListener() {
@@ -99,7 +102,7 @@ class NowPlayingInfoAdapter(
 
     class ViewHolder(val binding: ItemNowPlayingPageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: QueueItem) {
-            binding.title.text = item.title
+            binding.title.text = "${item.album.title} • ${item.artists.joinToString(", ") { it.name }}"
         }
     }
 
