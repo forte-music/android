@@ -12,7 +12,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 
 private const val EXTRA_TYPE_KEY = "type"
 
-// TODO: Figure Out Touch Events
 class ViewActivity : AppCompatActivity() {
     private val binding: ActivityViewBinding by dataBinding(R.layout.activity_view)
 

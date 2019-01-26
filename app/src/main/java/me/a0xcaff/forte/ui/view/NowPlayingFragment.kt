@@ -9,7 +9,6 @@ import androidx.lifecycle.Observer
 import com.squareup.picasso.Picasso
 import me.a0xcaff.forte.databinding.FragmentNowPlayingBinding
 import me.a0xcaff.forte.playback.Artist
-import me.a0xcaff.forte.playback.ConnectionState
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
@@ -41,6 +40,10 @@ class NowPlayingFragment : Fragment() {
         })
 
         binding.currentTime.register(viewModel.connection.state, this)
+
+        // Don't allow touch event to bubble behind this fragment.
+        binding.root.setOnTouchListener { _, _ -> true }
+
         return binding.root
     }
 }
