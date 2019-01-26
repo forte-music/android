@@ -7,12 +7,12 @@ import androidx.lifecycle.Observer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.databinding.ActivityViewBinding
-import me.a0xcaff.forte.playback.ConnectionState
 import me.a0xcaff.forte.ui.dataBinding
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 private const val EXTRA_TYPE_KEY = "type"
 
+// TODO: Figure Out Touch Events
 class ViewActivity : AppCompatActivity() {
     private val binding: ActivityViewBinding by dataBinding(R.layout.activity_view)
 
@@ -39,6 +39,8 @@ class ViewActivity : AppCompatActivity() {
 
         binding.playPause.setOnClickListener { playbackViewModel.togglePlayWhenReady() }
         playbackViewModel.playWhenReady.observe(this, Observer(binding.playPause::updatePlaybackState))
+
+        binding.nowPlaying.register(playbackViewModel.connection.state, this)
 
         handleIntent(intent)
     }
@@ -90,4 +92,3 @@ class ViewActivity : AppCompatActivity() {
         }
     }
 }
-

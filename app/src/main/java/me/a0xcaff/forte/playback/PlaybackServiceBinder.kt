@@ -51,6 +51,11 @@ interface PlaybackServiceBinder {
      */
     val nowPlaying: NowPlayingInfo?
 
+    /**
+     * Index of the currently playing track. This can be out of bounds.
+     */
+    var nowPlayingIndex: Int
+
     val queuePositionChanged: EventReceiver<Unit>
 
     val hasNext: Boolean
@@ -105,6 +110,10 @@ class PlaybackServiceBinderImpl(
 
     override val nowPlaying: NowPlayingInfo?
         get() = NowPlayingInfoImpl()
+
+    override var nowPlayingIndex: Int
+        get() = player.currentWindowIndex
+        set(value) = player.seekTo(value, 0)
 
     private val _queuePositionChanged = Event<Unit>()
     override val queuePositionChanged: EventReceiver<Unit> = _queuePositionChanged

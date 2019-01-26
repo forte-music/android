@@ -18,7 +18,7 @@ class ServiceRegistrationManager(
     val isBound: Boolean
         get() = binder != null
 
-    private fun mustBeBound(): PlaybackServiceBinder =
+    fun mustBeBound(): PlaybackServiceBinder =
         binder
             ?: throw java.lang.IllegalStateException("ServiceRegistrationManager mustBeBound called on unbound binder")
 
