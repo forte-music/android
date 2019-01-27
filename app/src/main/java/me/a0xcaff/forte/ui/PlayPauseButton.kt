@@ -2,14 +2,14 @@ package me.a0xcaff.forte.ui
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.ImageButton
+import androidx.appcompat.widget.AppCompatImageButton
 import me.a0xcaff.forte.R
 
 class PlayPauseButton @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ImageButton(context, attrs, defStyleAttr) {
+) : AppCompatImageButton(context, attrs, defStyleAttr) {
     private fun setPlayImage() {
         setImageResource(R.drawable.exo_controls_play)
     }
