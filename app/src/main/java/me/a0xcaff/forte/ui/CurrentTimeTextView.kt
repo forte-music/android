@@ -2,7 +2,7 @@ package me.a0xcaff.forte.ui
 
 import android.content.Context
 import android.util.AttributeSet
-import android.widget.TextView
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import me.a0xcaff.forte.R
@@ -12,7 +12,7 @@ class CurrentTimeTextView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : TextView(context, attrs, defStyleAttr) {
+) : AppCompatTextView(context, attrs, defStyleAttr) {
     private val manager = ServiceRegistrationManager(
         onBound = { service ->
             service.queuePositionChanged.observe(this::handleQueuePositionChanged)
