@@ -40,6 +40,8 @@ class NowPlayingFragment : Fragment() {
         })
 
         binding.currentTime.register(viewModel.connection.state, this)
+        viewModel.duration.observe(this, Observer { binding.totalTime.text = it })
+        binding.timebar.register(viewModel.connection.state, this)
 
         // Don't allow touch event to bubble behind this fragment.
         binding.root.setOnTouchListener { _, _ -> true }

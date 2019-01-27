@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+import me.a0xcaff.forte.R
 import me.a0xcaff.forte.playback.ConnectionState
 
 class CurrentTimeTextView @JvmOverloads constructor(
@@ -15,8 +16,6 @@ class CurrentTimeTextView @JvmOverloads constructor(
     private val manager = ServiceRegistrationManager(
         onBound = { service ->
             service.queuePositionChanged.observe(this::handleQueuePositionChanged)
-            // TODO: Bind More Events
-
             postUpdateOnAnimation()
         },
         onUnbound = { service ->
@@ -39,16 +38,20 @@ class CurrentTimeTextView @JvmOverloads constructor(
 
     private fun postUpdateOnAnimation() {
         postOnAnimation {
-            updateText()
             if (manager.isBound) {
+                updateText()
                 postUpdateOnAnimation()
             }
         }
     }
 
     private fun updateText() {
-        val time = manager.binder?.nowPlaying?.currentPosition ?: 0
-        text = formatTime(time)
+        val time = manager.binder?.nowPlaying?.currentPosition
+        if (time == null) {
+            text = context.getText(R.string.default_duration)
+        } else {
+            text = formatTime(time)
+        }
     }
 }
 

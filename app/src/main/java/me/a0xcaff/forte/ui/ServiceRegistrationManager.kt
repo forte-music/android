@@ -2,7 +2,6 @@ package me.a0xcaff.forte.ui
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import me.a0xcaff.forte.playback.ConnectionState
 import me.a0xcaff.forte.playback.EventReceiver
@@ -18,6 +17,7 @@ class ServiceRegistrationManager(
     val isBound: Boolean
         get() = binder != null
 
+    // TODO: Remove Usages
     fun mustBeBound(): PlaybackServiceBinder =
         binder
             ?: throw java.lang.IllegalStateException("ServiceRegistrationManager mustBeBound called on unbound binder")

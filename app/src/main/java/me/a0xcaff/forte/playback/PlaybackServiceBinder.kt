@@ -1,6 +1,7 @@
 package me.a0xcaff.forte.playback
 
 import android.os.Binder
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Timeline
 import me.a0xcaff.forte.previousOrBeginning
@@ -74,10 +75,10 @@ interface NowPlayingInfo {
     /**
      * The current progress of the track as number of milliseconds played. Poll this value for progress updates.
      */
-    val currentPosition: Long
+    var currentPosition: Long
 
     /**
-     * The duration of track in milliseconds.
+     * The duration of track in milliseconds. -1 if the duration is unknown.
      */
     val duration: Long
 
@@ -151,11 +152,12 @@ class PlaybackServiceBinderImpl(
         override val item: QueueItem
             get() = queue.getNowPlaying(player)!!
 
-        override val currentPosition: Long
+        override var currentPosition: Long
             get() = player.currentPosition
+            set(value) = player.seekTo(value)
 
         override val duration: Long
-            get() = player.duration
+            get() = if (player.duration == C.TIME_UNSET) -1 else player.duration
 
         override val bufferedPosition: Long
             get() = player.bufferedPosition

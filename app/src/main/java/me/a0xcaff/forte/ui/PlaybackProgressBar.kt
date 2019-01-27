@@ -83,10 +83,10 @@ class PlaybackProgressBar @JvmOverloads constructor(
 
     private fun postUpdateOnAnimation() {
         postOnAnimation {
-            updateProgress()
-            invalidate()
-
             if (manager.isBound) {
+                updateProgress()
+                invalidate()
+
                 postUpdateOnAnimation()
             }
         }
