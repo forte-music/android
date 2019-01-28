@@ -33,13 +33,6 @@ android {
         isEnabled = true
     }
 
-    // TODO: Kotlin Options
-    // kotlinOptions {
-    //     freeCompilerArgs = [
-    //         "-Xuse-experimental=kotlin.Experimental"
-    //     ]
-    // }
-
     compileOptions {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
