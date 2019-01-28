@@ -13,11 +13,12 @@
             android:layout_height="wrap_content" />
 
         <fragment
-            android:id="@+id/queue_fragment"
-            android:name="me.a0xcaff.forte.ui.view.QueueFragment"
+            android:id="@+id/nav_host_fragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:layout="@layout/fragment_queue" />
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/graph" />
 
         <FrameLayout
             android:id="@+id/sheet"

@@ -62,6 +62,10 @@ dependencies {
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.recyclerview:recyclerview:1.0.0")
 
+    val navVersion = "1.0.0-alpha11"
+    implementation("android.arch.navigation:navigation-fragment-ktx:$navVersion")
+    implementation("android.arch.navigation:navigation-ui-ktx:$navVersion")
+
     koinModules(
         listOf("core", "android", "androidx-scope", "androidx-viewmodel"),
         "1.0.2",
