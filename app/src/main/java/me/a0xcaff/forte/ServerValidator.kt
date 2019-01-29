@@ -1,9 +1,8 @@
 package me.a0xcaff.forte
 
 import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.coroutines.toDeferred
 import com.apollographql.apollo.exception.ApolloException
-import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.first
 import me.a0xcaff.forte.graphql.TestQuery
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -21,7 +20,6 @@ interface ServerValidator {
  * for all songs.
  */
 class ServerValidatorImpl(private val okHttpClient: OkHttpClient) : ServerValidator {
-    @UseExperimental(ObsoleteCoroutinesApi::class)
     override suspend fun validate(url: HttpUrl): ValidationResult {
         val apolloClient = ApolloClient.builder()
             .okHttpClient(okHttpClient)
@@ -29,15 +27,11 @@ class ServerValidatorImpl(private val okHttpClient: OkHttpClient) : ServerValida
             .build()
 
         val testQuery = TestQuery.builder().build()
-        val respChannel = apolloClient.query(testQuery).executeAsync()
-
         val resp = try {
-            respChannel.first()
+            apolloClient.query(testQuery).toDeferred().await()
         } catch (e: ApolloException) {
             val message = e.message ?: ""
             return Failure(message)
-        } finally {
-            respChannel.cancel()
         }
 
         if (resp.hasErrors()) {

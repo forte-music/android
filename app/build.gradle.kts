@@ -78,12 +78,17 @@ dependencies {
         this::implementation
     )
 
+    apolloModules(
+        listOf("runtime", "coroutine-support"),
+        "1.0.0-alpha5",
+        this::implementation
+    )
+
     implementation("com.facebook.stetho:stetho:1.5.0")
     implementation("com.facebook.stetho:stetho-okhttp3:1.5.0")
 
     implementation("com.google.android.material:material:1.1.0-alpha02")
     implementation("com.squareup.picasso:picasso:2.71828")
-    implementation("com.apollographql.apollo:apollo-runtime:1.0.0-alpha4")
 
     testImplementation("junit:junit:4.12")
     testImplementation("androidx.arch.core:core-testing:$lifecycleVersion")
@@ -105,3 +110,10 @@ fun exoplayerModules(modules: List<String>, version: String, register: (dependen
 
 fun kotlinx(module: String, version: String): String =
     "org.jetbrains.kotlinx:kotlinx-$module:$version"
+
+fun apollo(module: String, version: String): String =
+    "com.apollographql.apollo:apollo-$module:$version"
+
+fun apolloModules(modules: List<String>, version: String, register: (dependencyNotation: Any) -> Dependency?) =
+    modules.forEach { register(apollo(it, version)) }
+
