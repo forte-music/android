@@ -15,7 +15,6 @@ import me.a0xcaff.forte.R
 import me.a0xcaff.forte.playback.*
 import okhttp3.OkHttpClient
 import org.koin.core.KoinContext
-import org.koin.core.parameter.parametersOf
 import org.koin.dsl.context.ModuleDefinition
 import org.koin.dsl.definition.Definition
 import org.koin.dsl.module.module
@@ -34,32 +33,32 @@ val PlaybackServiceModule = module {
         )
     }
 
-    playbackScopeService("MediaSession BitmapFetcher") { service ->
+    playbackScope("MediaSession BitmapFetcher") {
         BitmapFetcher(
             picasso = get(),
-            scope = service.scope
+            scope = get<PlaybackService>().scope
         ) {
             resizeDimen(R.dimen.media_session_max_artwork_size, R.dimen.media_session_max_artwork_size)
             centerInside()
         }
     }
 
-    playbackScopeService("Notification BitmapFetcher") { service ->
+    playbackScope("Notification BitmapFetcher") {
         BitmapFetcher(
             picasso = get(),
-            scope = service.scope
+            scope = get<PlaybackService>().scope
         ) {
             resizeDimen(R.dimen.notification_large_artwork_size, R.dimen.notification_large_artwork_size)
             centerInside()
         }
     }
 
-    playbackScopeService { service ->
+    playbackScope {
         Backend(
             apolloClient = get(),
             baseUri = Uri.parse("http://10.0.2.2:3000/"),
             quality = Quality.RAW,
-            scope = service.scope
+            scope = get<PlaybackService>().scope
         )
     }
 
@@ -89,8 +88,8 @@ val PlaybackServiceModule = module {
             .build()
     }
 
-    playbackScopeService { service ->
-        ExoPlayerFactory.newSimpleInstance(service).apply {
+    playbackScope {
+        ExoPlayerFactory.newSimpleInstance(get<PlaybackService>()).apply {
             prepare(get())
 
             val audioAttributes = get<AudioAttributes>()
@@ -99,59 +98,59 @@ val PlaybackServiceModule = module {
     }
 
 
-    playbackScopeService("Notification Channel") { service ->
+    playbackScope("Notification Channel") {
         NotificationUtil.createNotificationChannel(
-            service,
+            get<PlaybackService>(),
             NOW_PLAYING_CHANNEL_ID,
             R.string.playback_notification_channel_name,
             NotificationUtil.IMPORTANCE_LOW
         )
     }
 
-    playbackScopeService { service ->
+    playbackScope {
         NotificationMetadataProvider(
             queue = get(),
-            context = service,
-            fetcher = playbackScopeGet(service, "Notification BitmapFetcher"),
-            player = playbackScopeGet<SimpleExoPlayer>(service),
-            scope = service.scope
+            context = get<PlaybackService>(),
+            fetcher = get("Notification BitmapFetcher"),
+            player = get<SimpleExoPlayer>(),
+            scope = get<PlaybackService>().scope
         )
     }
 
-    playbackScopeService { service ->
-        MediaSessionCompat(service, "ForteMediaPlaybackService").apply {
+    playbackScope {
+        MediaSessionCompat(get<PlaybackService>(), "ForteMediaPlaybackService").apply {
             isActive = true
         }
     }
 
-    playbackScopeService { service ->
+    playbackScope {
         MediaSessionMetadataProvider.withConnector(
-            mediaSession = playbackScopeGet(service),
+            mediaSession = get(),
             queue = get(),
-            fetcher = playbackScopeGet(service, "MediaSession BitmapFetcher")
+            fetcher = get("MediaSession BitmapFetcher")
         ).apply {
-            val player = playbackScopeGet<SimpleExoPlayer>(service)
+            val player = get<SimpleExoPlayer>()
             setPlayer(player, null)
         }
     }
 
-    playbackScopeService { service ->
-        playbackScopeGet<Unit>(service, "Notification Channel")
+    playbackScope {
+        get<Unit>("Notification Channel")
 
         PlayerNotificationManager(
-            player = playbackScopeGet<SimpleExoPlayer>(service),
-            service = service,
-            mediaDescriptionAdapter = playbackScopeGet<NotificationMetadataProvider>(service),
-            mediaSessionCompatToken = playbackScopeGet<MediaSessionCompat>(service).sessionToken,
+            player = get<SimpleExoPlayer>(),
+            service = get<PlaybackService>(),
+            mediaDescriptionAdapter = get<NotificationMetadataProvider>(),
+            mediaSessionCompatToken = get<MediaSessionCompat>().sessionToken,
             notificationId = NOW_PLAYING_NOTIFICATION_ID,
             channelId = NOW_PLAYING_CHANNEL_ID,
-            scope = service.scope
+            scope = get<PlaybackService>().scope
         )
     }
 
-    playbackScopeService { service ->
+    playbackScope {
         PlaybackServiceBinderImpl(
-            player = playbackScopeGet<SimpleExoPlayer>(service),
+            player = get<SimpleExoPlayer>(),
             queue = get()
         )
     }
@@ -159,14 +158,6 @@ val PlaybackServiceModule = module {
 
 inline fun <reified T : Any> ModuleDefinition.playbackScope(name: String = "", noinline definition: Definition<T>) =
     scope(PlaybackService::javaClass.name, name = name, definition = definition)
-
-inline fun <reified T : Any> ModuleDefinition.playbackScopeService(
-    name: String = "",
-    crossinline builder: (PlaybackService) -> T
-) = scope(PlaybackService::javaClass.name, name) { (service: PlaybackService) -> builder(service) }
-
-inline fun <reified T : Any> ModuleDefinition.playbackScopeGet(service: PlaybackService, name: String = ""): T =
-    get(name, PlaybackService::javaClass.name) { parametersOf(service) }
 
 fun KoinContext.createPlaybackScope() =
     createScope(PlaybackService::javaClass.name)

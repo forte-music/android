@@ -14,7 +14,6 @@ import kotlinx.coroutines.cancel
 import me.a0xcaff.forte.di.createPlaybackScope
 import org.koin.android.ext.android.get
 import org.koin.android.ext.android.getKoin
-import org.koin.core.parameter.parametersOf
 import org.koin.core.scope.Scope
 
 /**
@@ -34,17 +33,17 @@ class PlaybackService : Service() {
         super.onCreate()
 
         playbackScope = getKoin().createPlaybackScope()
-        // TODO: Try Using Add Instance
+        playbackScope.addInstance(this)
 
-        binder = get { parametersOf(this) }
-        mediaSession = get { parametersOf(this) }
-        playerNotificationManager = get { parametersOf(this) }
-        player = get { parametersOf(this) }
-        mediaSessionConnector = get { parametersOf(this) }
+        binder = get()
+        mediaSession = get()
+        playerNotificationManager = get()
+        player = get()
+        mediaSessionConnector = get()
 
         val queue = get<Queue>()
-        val backend = get<Backend> { parametersOf(this) }
-        val mediaSource = get<MediaSource>() { parametersOf(this) }
+        val backend = get<Backend>()
+        val mediaSource = get<MediaSource>()
 
         queue.add(
             QueueItem("00000000000000000000000000000001", backend),
