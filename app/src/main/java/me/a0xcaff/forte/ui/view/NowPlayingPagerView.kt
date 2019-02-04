@@ -9,10 +9,13 @@ import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.*
 import me.a0xcaff.forte.databinding.ItemNowPlayingPageBinding
+import me.a0xcaff.forte.graphql.SongQueueQuery
 import me.a0xcaff.forte.playback.ConnectionState
 import me.a0xcaff.forte.playback.PlaybackServiceBinder
 import me.a0xcaff.forte.playback.QueueItem
+import me.a0xcaff.forte.playback.returnNowOrLater
 import me.a0xcaff.forte.ui.ServiceRegistrationManager
 
 class NowPlayingPagerView @JvmOverloads constructor(
@@ -95,21 +98,39 @@ class NowPlayingInfoAdapter(
     private val service: PlaybackServiceBinder
 ) : RecyclerView.Adapter<NowPlayingInfoAdapter.ViewHolder>() {
     val listener = RecyclerViewListener<QueueItem>(this)
+    val scope = CoroutineScope(Dispatchers.Main)
 
     init {
         service.queue.registerObserver(listener)
     }
 
-    class ViewHolder(val binding: ItemNowPlayingPageBinding) : RecyclerView.ViewHolder(binding.root) {
+    class ViewHolder(val binding: ItemNowPlayingPageBinding, private val scope: CoroutineScope) :
+        RecyclerView.ViewHolder(binding.root) {
+        private var currentItem: QueueItem? = null
+        private val currentJob: Job? = null
+
         fun bind(item: QueueItem) {
-            binding.title.text = "${item.album.title} • ${item.artists.joinToString(", ") { it.name }}"
+            if (item == currentItem) {
+                return
+            }
+
+            currentJob?.cancel()
+            bind(loadDeferred(item.song))
+            currentItem = item
+        }
+
+        private fun loadDeferred(deferred: Deferred<SongQueueQuery.Song>) =
+            returnNowOrLater(scope, deferred, this::bind)
+
+        fun bind(song: SongQueueQuery.Song?) {
+            binding.title.text = song?.name() ?: "..."
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = ItemNowPlayingPageBinding.inflate(layoutInflater, parent, false)
-        return ViewHolder(binding)
+        return ViewHolder(binding, scope)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) =
@@ -118,7 +139,9 @@ class NowPlayingInfoAdapter(
     override fun getItemCount(): Int =
         service.queue.items.size
 
+    @UseExperimental(ExperimentalCoroutinesApi::class)
     fun release() {
         service.queue.unregisterObserver(listener)
+        scope.cancel()
     }
 }

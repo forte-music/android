@@ -1,0 +1,26 @@
+# All the information needed to render the song in the queue now playing views
+# (notification, media session, etc.).
+query SongQueueQuery($id: ID!) {
+  song(id: $id) {
+    id
+    name
+
+    album {
+      id
+      name
+      artworkUrl
+
+      artist {
+        id
+        name
+      }
+    }
+
+    artists {
+      id
+      name
+    }
+
+    duration
+  }
+}

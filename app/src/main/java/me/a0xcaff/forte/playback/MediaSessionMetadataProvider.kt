@@ -4,11 +4,17 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 
 class MediaSessionMetadataProvider(
     private val queue: Queue,
     private val fetcher: BitmapFetcher
 ) : MediaSessionConnector.MediaMetadataProvider {
+    private val scope = CoroutineScope(Dispatchers.Main)
+
     override fun getMetadata(player: Player): MediaMetadataCompat {
         val playing = queue.getNowPlaying(player)
         return MediaMetadataCompat.Builder().apply {
@@ -16,31 +22,32 @@ class MediaSessionMetadataProvider(
                 return@apply
             }
 
-            val bitmap = fetcher.getFor(playing.album.artworkUrl) {
-                connector!!.invalidateMediaSessionMetadata()
-            }
+            val song = loadDeferred(playing.song) ?: return@apply
+
+            val artworkUrl = song.album().artworkUrl()
+            val bitmap = artworkUrl?.let { loadDeferred(fetcher.getAsync(it)) }
 
             putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bitmap)
-            putString(MediaMetadataCompat.METADATA_KEY_TITLE, playing.title)
-            putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playing.album.title)
+            putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.name())
+            putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.album().name())
             putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, playing.songId)
             putString(
                 MediaMetadataCompat.METADATA_KEY_ARTIST,
-                playing.artists.joinToString(", ") { it.name }
+                song.artists().joinToString(", ") { it.name() }
             )
 
             // TODO: Additional Metadata
         }.build()
     }
 
-    var connector: MediaSessionConnector? = null
-        set(value) {
-            if (field != null) {
-                throw IllegalStateException("Connector already configured")
-            }
+    private fun <T> loadDeferred(deferred: Deferred<T>) =
+        returnNowOrLater(scope, deferred) { connector.invalidateMediaSessionMetadata() }
 
-            field = value
-        }
+    fun release() {
+        scope.cancel()
+    }
+
+    lateinit var connector: MediaSessionConnector
 
     companion object {
         fun withConnector(

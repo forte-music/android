@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
+import com.apollographql.apollo.ApolloClient
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -14,10 +15,12 @@ import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.util.NotificationUtil
-import com.squareup.picasso.Picasso
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import me.a0xcaff.forte.R
 import org.koin.android.ext.android.get
-import org.koin.android.ext.android.inject
 
 const val NOW_PLAYING_NOTIFICATION_ID = 0xcaff
 const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
@@ -36,15 +39,28 @@ class PlaybackService : Service() {
 
     private lateinit var mediaSessionConnector: MediaSessionConnector
 
-    private val upstreamDataSourceFactory: OkHttpDataSourceFactory by inject()
+    private lateinit var backend: Backend
+
+    private val upstreamDataSourceFactory: OkHttpDataSourceFactory = get()
 
     private val notificationBitmapFetcher: BitmapFetcher = get("Notification BitmapFetcher")
 
     private val mediaSessionBitmapFetcher: BitmapFetcher = get("MediaSession BitmapFetcher")
 
+    private val apolloClient: ApolloClient = get()
+
+    private val scope = CoroutineScope(Dispatchers.Main)
+
     override fun onCreate() {
         super.onCreate()
         val context = this
+
+        backend = Backend(
+            apolloClient,
+            Uri.parse("http://10.0.2.2:3000/"),
+            Quality.RAW,
+            scope
+        )
 
         val queue = Queue()
         val mediaSource = ConcatenatingMediaSource()
@@ -52,9 +68,7 @@ class PlaybackService : Service() {
 
         val updater = ConcatenatingMediaSourceUpdater(
             mediaSource,
-            mediaSourceFactory,
-            Quality.RAW,
-            Uri.parse("http://10.0.2.2:3000/")
+            mediaSourceFactory
         )
 
         queue.registerObserver(updater)
@@ -76,7 +90,9 @@ class PlaybackService : Service() {
         val mediaDescriptionAdapter = NotificationMetadataProvider(
             queue,
             context,
-            notificationBitmapFetcher
+            notificationBitmapFetcher,
+            player,
+            scope
         )
 
         NotificationUtil.createNotificationChannel(
@@ -92,7 +108,8 @@ class PlaybackService : Service() {
             mediaDescriptionAdapter,
             mediaSession.sessionToken,
             NOW_PLAYING_NOTIFICATION_ID,
-            NOW_PLAYING_CHANNEL_ID
+            NOW_PLAYING_CHANNEL_ID,
+            scope
         )
 
         mediaSessionConnector = MediaSessionMetadataProvider.withConnector(
@@ -106,30 +123,13 @@ class PlaybackService : Service() {
         binder = PlaybackServiceBinderImpl(player, queue)
 
         queue.add(
-            QueueItem(
-                "00000000000000000000000000000001",
-                "Stole the Show",
-                arrayOf(Artist("Kygo")),
-                Album(
-                    "00000000000000000000000000000001",
-                    "Stole the Show",
-                    "https://i.scdn.co/image/d345ab2a8278434f1c8cc936ace70da02ac845fb"
-                )
-            ),
-            QueueItem(
-                "00000000000000000000000000000002",
-                "I'm That (Remix)",
-                arrayOf(Artist("R. City"), Artist("Beenie Man"), Artist("Azealia Banks")),
-                Album(
-                    "00000000000000000000000000000002",
-                    "I'm That (Remix)",
-                    "http://is4.mzstatic.com/image/thumb/Music5/v4/08/da/96/08da9619-3f9b-7c95-60d1-6c18cfdd4dbd/source/600x600bb.jpg"
-                )
-            )
+            QueueItem("00000000000000000000000000000001", backend),
+            QueueItem("00000000000000000000000000000002", backend)
         )
         player.prepare(mediaSource)
     }
 
+    @UseExperimental(ExperimentalCoroutinesApi::class)
     override fun onDestroy() {
         super.onDestroy()
         binder.release()
@@ -139,6 +139,7 @@ class PlaybackService : Service() {
         mediaSessionBitmapFetcher.release()
         mediaSessionConnector.setPlayer(null, null)
         player.release()
+        scope.cancel()
     }
 
     override fun onBind(intent: Intent?): IBinder? = binder

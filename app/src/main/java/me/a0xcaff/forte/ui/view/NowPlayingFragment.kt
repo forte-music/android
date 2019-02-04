@@ -8,11 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import com.squareup.picasso.Picasso
 import me.a0xcaff.forte.databinding.FragmentNowPlayingBinding
-import me.a0xcaff.forte.playback.Artist
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
-// TODO: Implement Playback Time View + Seekbar
 // TODO: Image Placeholder
 
 class NowPlayingFragment : Fragment() {
@@ -31,12 +29,21 @@ class NowPlayingFragment : Fragment() {
         binding.playPause.setOnClickListener { viewModel.togglePlayWhenReady() }
         viewModel.playWhenReady.observe(this, Observer(binding.playPause::updatePlaybackState))
 
-        viewModel.nowPlaying.observe(this, Observer {
-            picasso.load(it.item.album.artworkUrl)
-                .into(binding.artwork)
+        viewModel.nowPlaying.observe(this, Observer { song ->
+            if (song == null) {
+                binding.album.text = "..."
+                binding.artist.text = "..."
+                binding.artwork.setImageBitmap(null)
+                return@Observer
+            }
 
-            binding.album.text = it.item.album.title
-            binding.artist.text = it.item.artists.joinToString(", ", transform = Artist::name::get)
+            val artworkUrl = song.album().artworkUrl()
+            if (artworkUrl != null) {
+                picasso.load(artworkUrl).into(binding.artwork)
+            }
+
+            binding.album.text = song.album().name()
+            binding.artist.text = song.artists().joinToString(", ") { it.name() }
         })
 
         binding.currentTime.register(viewModel.connection.state, this)

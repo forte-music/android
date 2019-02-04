@@ -9,8 +9,10 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.*
 import me.a0xcaff.forte.databinding.FragmentQueueBinding
 import me.a0xcaff.forte.databinding.QueueItemBinding
+import me.a0xcaff.forte.graphql.SongQueueQuery
 import me.a0xcaff.forte.playback.*
 import org.koin.android.ext.android.inject
 
@@ -28,10 +30,12 @@ class QueueFragment : Fragment() {
 
     private lateinit var binding: FragmentQueueBinding
 
+    private val scope = CoroutineScope(Dispatchers.Main)
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentQueueBinding.inflate(inflater, container, false)
 
-        val queueAdapter = QueueAdapter()
+        val queueAdapter = QueueAdapter(scope)
 
         val recyclerView = binding.items
         recyclerView.apply {
@@ -55,9 +59,17 @@ class QueueFragment : Fragment() {
 
         return binding.root
     }
+
+    @UseExperimental(ExperimentalCoroutinesApi::class)
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
+    }
 }
 
-class QueueAdapter : RecyclerView.Adapter<QueueAdapter.ViewHolder>() {
+class QueueAdapter(
+    val scope: CoroutineScope
+) : RecyclerView.Adapter<QueueAdapter.ViewHolder>() {
     private val itemTouchCallback = ItemTouchCallback()
 
     val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
@@ -77,16 +89,32 @@ class QueueAdapter : RecyclerView.Adapter<QueueAdapter.ViewHolder>() {
             notifyDataSetChanged()
         }
 
-    class ViewHolder(val binding: QueueItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    class ViewHolder(val binding: QueueItemBinding, val scope: CoroutineScope) : RecyclerView.ViewHolder(binding.root) {
+        private var currentItem: QueueItem? = null
+        private var currentJob: Job? = null
+
         fun bind(item: QueueItem) {
-            binding.title.text = item.title
+            if (currentItem == item) {
+                return
+            }
+
+            currentJob?.cancel()
+            bind(loadDeferred(item.song))
+            currentItem = item
+        }
+
+        private fun loadDeferred(deferred: Deferred<SongQueueQuery.Song>) =
+            returnNowOrLater(scope, deferred, this::bind)
+
+        private fun bind(song: SongQueueQuery.Song?) {
+            binding.title.text = song?.name() ?: "..."
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val binding = QueueItemBinding.inflate(layoutInflater, parent, false)
-        return ViewHolder(binding)
+        return ViewHolder(binding, scope)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(queue!!.items[position])

@@ -32,13 +32,10 @@ class BitmapFetcher(
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
-    fun getFor(url: String, callback: (Bitmap) -> Unit): Bitmap? {
-        val deferred = singleValueCache.computeIfAbsent(url) {
+    fun getAsync(url: String): Deferred<Bitmap> =
+        singleValueCache.computeIfAbsent(url) {
             coroutineScope.async { picasso.get(url, transform) }
         }
-
-        return returnNowOrLater(coroutineScope, deferred, callback)
-    }
 
     @UseExperimental(ExperimentalCoroutinesApi::class)
     fun release() {

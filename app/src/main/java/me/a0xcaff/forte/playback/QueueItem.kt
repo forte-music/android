@@ -1,45 +1,18 @@
 package me.a0xcaff.forte.playback
 
 import android.net.Uri
-
-// TODO: Fetch Data from Apollo
-// TODO: Figure Out Threading
+import kotlinx.coroutines.Deferred
+import me.a0xcaff.forte.graphql.SongQueueQuery
 
 var lastQueueId: Long = 0
 
-enum class Quality {
-    RAW {
-        override fun asPath(): String = "raw"
-    };
-
-    abstract fun asPath(): String
-}
-
-class Album(
-    val id: String,
-    val title: String,
-    val artworkUrl: String
-)
-
-class Artist(
-    val name: String
-)
-
 class QueueItem(
     val songId: String,
-    val title: String,
-    val artists: Array<Artist>,
-    val album: Album
+    private val backend: Backend
 ) {
     val id: Long = lastQueueId++
 
-    fun audioUri(base: Uri, quality: Quality): Uri = base.buildUpon().run {
-        appendEncodedPath("files")
-        appendEncodedPath("music")
-        appendEncodedPath(songId)
-        appendEncodedPath(quality.asPath())
+    val song: Deferred<SongQueueQuery.Song> by lazy { backend.getQueueInfoAsync(songId) }
 
-        build()
-    }
+    val songUri: Uri = backend.audioUri(songId)
 }
-

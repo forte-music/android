@@ -1,5 +1,6 @@
 package me.a0xcaff.forte.di
 
+import com.apollographql.apollo.ApolloClient
 import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.squareup.picasso.OkHttp3Downloader
@@ -10,6 +11,7 @@ import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.ui.connect.ConnectActivityViewModel
 import me.a0xcaff.forte.ui.view.BottomSheetViewModel
 import me.a0xcaff.forte.ui.view.PlaybackViewModel
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.ext.koin.viewModel
@@ -45,6 +47,15 @@ val Module = module {
             resizeDimen(R.dimen.notification_large_artwork_size, R.dimen.notification_large_artwork_size)
             centerInside()
         }
+    }
+
+    single("Server URL") { get<Config>().serverUrl!! }
+
+    single {
+        ApolloClient.builder()
+            .serverUrl(get<HttpUrl>("Server URL"))
+            .okHttpClient(get())
+            .build()
     }
 
     viewModel { ConnectActivityViewModel(serverValidator = get(), config = get()) }

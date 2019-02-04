@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -16,7 +15,8 @@ import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Timeline
 import com.google.android.exoplayer2.util.Util
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import me.a0xcaff.forte.R
 import me.a0xcaff.forte.previousOrBeginning
 
@@ -26,31 +26,38 @@ class PlayerNotificationManager(
     private val mediaDescriptionAdapter: MediaDescriptionAdapter,
     private val mediaSessionCompatToken: MediaSessionCompat.Token,
     notificationId: Int,
-    private val channelId: String
+    private val channelId: String,
+    private val scope: CoroutineScope
 ) {
     private val context = service
+
     private val actions = DefaultActions(context, notificationId)
     private val broadcastReceiver = NotificationBroadcastReceiver(notificationId)
     private val notificationDispatcher = NotificationDispatcher(notificationId, service, player)
-    private val coroutineContext = CoroutineScope(Dispatchers.Main)
     private val listener = PlayerListener(player, this::startOrUpdateNotification)
 
-    private var currentNotificationTag = 0
     private var isNotificationStarted = false
 
     init {
         player.addListener(listener)
     }
 
-    @UseExperimental(ExperimentalCoroutinesApi::class)
     fun release() {
-        coroutineContext.cancel()
         player.removeListener(listener)
         stopNotification()
     }
 
-    private fun updateNotification(bitmap: Bitmap? = null) {
-        val notification = createNotification(bitmap)
+    private fun invalidate() {
+        if (isNotificationStarted) {
+            updateNotification()
+        }
+    }
+
+    private fun <T> loadDeferred(deferred: Deferred<T>) =
+        returnNowOrLater(scope, deferred) { invalidate() }
+
+    private fun updateNotification() {
+        val notification = createNotification()
         notificationDispatcher.notify(notification)
     }
 
@@ -70,7 +77,7 @@ class PlayerNotificationManager(
         }
     }
 
-    private fun createNotification(bitmap: Bitmap?): Notification {
+    private fun createNotification(): Notification {
         val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
         mediaStyle.setMediaSession(mediaSessionCompatToken)
 
@@ -91,19 +98,17 @@ class PlayerNotificationManager(
             setSmallIcon(R.drawable.exo_notification_small_icon)
             priority = NotificationCompat.PRIORITY_LOW
 
-            setContentTitle(mediaDescriptionAdapter.getCurrentContentTitle(player))
-            setContentText(mediaDescriptionAdapter.getCurrentContentText(player))
-            setContentIntent(mediaDescriptionAdapter.createCurrentContentIntent(player))
-            setShowWhen(false)
+            val content =
+                loadDeferred(mediaDescriptionAdapter.content) ?: NotificationContent(title = "...", text = "...")
 
-            if (bitmap != null) {
-                setLargeIcon(bitmap)
-            } else {
-                val newIcon = mediaDescriptionAdapter.getCurrentLargeIcon(player, createBitmapCallback())
-                if (newIcon != null) {
-                    setLargeIcon(newIcon)
-                }
-            }
+            setContentTitle(content.title)
+            setContentText(content.text)
+
+            val bitmap = loadDeferred(mediaDescriptionAdapter.largeIcon)
+            setLargeIcon(bitmap)
+
+            setContentIntent(mediaDescriptionAdapter.contentIntent)
+            setShowWhen(false)
         }
 
         return builder.build()
@@ -168,18 +173,6 @@ class PlayerNotificationManager(
         }
     }
 
-    inner class BitmapCallback(val tag: Int) {
-        fun onBitmap(bitmap: Bitmap) {
-            coroutineContext.launch {
-                if (currentNotificationTag == tag && isNotificationStarted) {
-                    updateNotification(bitmap)
-                }
-            }
-        }
-    }
-
-    private fun createBitmapCallback(): BitmapCallback = BitmapCallback(++currentNotificationTag)
-
     inner class NotificationBroadcastReceiver(private val instanceId: Int) : BroadcastReceiver() {
         private fun isValidMessage(intent: Intent): Boolean {
             if (!isNotificationStarted) {
@@ -207,13 +200,6 @@ class PlayerNotificationManager(
                 ACTION_CANCEL -> stopNotification()
             }
         }
-    }
-
-    interface MediaDescriptionAdapter {
-        fun createCurrentContentIntent(player: Player): PendingIntent?
-        fun getCurrentContentTitle(player: Player): String
-        fun getCurrentContentText(player: Player): String?
-        fun getCurrentLargeIcon(player: Player, callback: PlayerNotificationManager.BitmapCallback): Bitmap?
     }
 }
 
