@@ -17,9 +17,6 @@ import org.koin.android.ext.android.getKoin
 import org.koin.core.parameter.parametersOf
 import org.koin.core.scope.Scope
 
-const val NOW_PLAYING_NOTIFICATION_ID = 0xcaff
-const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
-
 /**
  * Service responsible for playing audio and keeping the notification up to date.
  */

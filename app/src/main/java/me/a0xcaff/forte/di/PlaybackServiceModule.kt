@@ -20,6 +20,9 @@ import org.koin.dsl.context.ModuleDefinition
 import org.koin.dsl.definition.Definition
 import org.koin.dsl.module.module
 
+const val NOW_PLAYING_NOTIFICATION_ID = 0xcaff
+const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
+
 /**
  * Collection of stuff owned by [PlaybackService].
  */
