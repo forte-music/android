@@ -26,19 +26,13 @@ fun <T> returnNowOrLater(scope: CoroutineScope, source: Deferred<T>, callback: (
  */
 class BitmapFetcher(
     private val picasso: Picasso,
+    private val scope: CoroutineScope,
     private val transform: RequestCreator.() -> Unit
 ) {
     private val singleValueCache = SingleValueCache<String, Deferred<Bitmap>>()
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Main)
-
     fun getAsync(url: String): Deferred<Bitmap> =
         singleValueCache.computeIfAbsent(url) {
-            coroutineScope.async { picasso.get(url, transform) }
+            scope.async { picasso.get(url, transform) }
         }
-
-    @UseExperimental(ExperimentalCoroutinesApi::class)
-    fun release() {
-        coroutineScope.cancel()
-    }
 }

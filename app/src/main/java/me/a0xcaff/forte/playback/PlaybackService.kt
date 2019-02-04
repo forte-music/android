@@ -2,25 +2,20 @@ package me.a0xcaff.forte.playback
 
 import android.app.Service
 import android.content.Intent
-import android.net.Uri
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
-import com.apollographql.apollo.ApolloClient
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
-import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.google.android.exoplayer2.source.ExtractorMediaSource
-import com.google.android.exoplayer2.util.NotificationUtil
+import com.google.android.exoplayer2.source.MediaSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
-import me.a0xcaff.forte.R
+import me.a0xcaff.forte.di.createPlaybackScope
 import org.koin.android.ext.android.get
+import org.koin.android.ext.android.getKoin
+import org.koin.core.parameter.parametersOf
+import org.koin.core.scope.Scope
 
 const val NOW_PLAYING_NOTIFICATION_ID = 0xcaff
 const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
@@ -30,97 +25,29 @@ const val NOW_PLAYING_CHANNEL_ID = "me.a0xcaff.forte.ui.notification"
  */
 class PlaybackService : Service() {
     private lateinit var binder: PlaybackServiceBinderImpl
-
     private lateinit var mediaSession: MediaSessionCompat
-
     private lateinit var playerNotificationManager: PlayerNotificationManager
-
     private lateinit var player: SimpleExoPlayer
-
     private lateinit var mediaSessionConnector: MediaSessionConnector
+    private lateinit var playbackScope: Scope
 
-    private lateinit var backend: Backend
-
-    private val upstreamDataSourceFactory: OkHttpDataSourceFactory = get()
-
-    private val notificationBitmapFetcher: BitmapFetcher = get("Notification BitmapFetcher")
-
-    private val mediaSessionBitmapFetcher: BitmapFetcher = get("MediaSession BitmapFetcher")
-
-    private val apolloClient: ApolloClient = get()
-
-    private val scope = CoroutineScope(Dispatchers.Main)
+    val scope = CoroutineScope(Dispatchers.Main)
 
     override fun onCreate() {
         super.onCreate()
-        val context = this
 
-        backend = Backend(
-            apolloClient,
-            Uri.parse("http://10.0.2.2:3000/"),
-            Quality.RAW,
-            scope
-        )
+        playbackScope = getKoin().createPlaybackScope()
+        // TODO: Try Using Add Instance
 
-        val queue = Queue()
-        val mediaSource = ConcatenatingMediaSource()
-        val mediaSourceFactory = ExtractorMediaSource.Factory(upstreamDataSourceFactory)
+        binder = get { parametersOf(this) }
+        mediaSession = get { parametersOf(this) }
+        playerNotificationManager = get { parametersOf(this) }
+        player = get { parametersOf(this) }
+        mediaSessionConnector = get { parametersOf(this) }
 
-        val updater = ConcatenatingMediaSourceUpdater(
-            mediaSource,
-            mediaSourceFactory
-        )
-
-        queue.registerObserver(updater)
-
-        mediaSession = MediaSessionCompat(this, "ForteMediaPlaybackService")
-        mediaSession.isActive = true
-
-        player = ExoPlayerFactory.newSimpleInstance(this).apply {
-            prepare(mediaSource)
-
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(C.USAGE_MEDIA)
-                .setContentType(C.CONTENT_TYPE_MUSIC)
-                .build()
-
-            setAudioAttributes(audioAttributes, true)
-        }
-
-        val mediaDescriptionAdapter = NotificationMetadataProvider(
-            queue,
-            context,
-            notificationBitmapFetcher,
-            player,
-            scope
-        )
-
-        NotificationUtil.createNotificationChannel(
-            this,
-            NOW_PLAYING_CHANNEL_ID,
-            R.string.playback_notification_channel_name,
-            NotificationUtil.IMPORTANCE_LOW
-        )
-
-        playerNotificationManager = PlayerNotificationManager(
-            player,
-            this,
-            mediaDescriptionAdapter,
-            mediaSession.sessionToken,
-            NOW_PLAYING_NOTIFICATION_ID,
-            NOW_PLAYING_CHANNEL_ID,
-            scope
-        )
-
-        mediaSessionConnector = MediaSessionMetadataProvider.withConnector(
-            mediaSession,
-            queue,
-            mediaSessionBitmapFetcher
-        ).apply {
-            setPlayer(player, null)
-        }
-
-        binder = PlaybackServiceBinderImpl(player, queue)
+        val queue = get<Queue>()
+        val backend = get<Backend> { parametersOf(this) }
+        val mediaSource = get<MediaSource>() { parametersOf(this) }
 
         queue.add(
             QueueItem("00000000000000000000000000000001", backend),
@@ -135,11 +62,10 @@ class PlaybackService : Service() {
         binder.release()
         playerNotificationManager.release()
         mediaSession.release()
-        notificationBitmapFetcher.release()
-        mediaSessionBitmapFetcher.release()
         mediaSessionConnector.setPlayer(null, null)
         player.release()
         scope.cancel()
+        playbackScope.close()
     }
 
     override fun onBind(intent: Intent?): IBinder? = binder
