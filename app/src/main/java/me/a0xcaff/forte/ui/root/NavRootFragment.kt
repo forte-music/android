@@ -1,4 +1,4 @@
-package me.a0xcaff.forte.ui
+package me.a0xcaff.forte.ui.root
 
 import android.os.Bundle
 import android.view.LayoutInflater

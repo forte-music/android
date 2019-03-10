@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/root"
-        android:name="me.a0xcaff.forte.ui.NavRootFragment"
+        android:name="me.a0xcaff.forte.ui.root.NavRootFragment"
         android:label="NavigationRootFragment">
         <action
             android:id="@+id/action_root_to_queue"
@@ -15,6 +15,6 @@
 
     <fragment
         android:id="@+id/queue"
-        android:name="me.a0xcaff.forte.ui.view.QueueFragment"
+        android:name="me.a0xcaff.forte.ui.queue.QueueFragment"
         android:label="QueueFragment" />
 </navigation>

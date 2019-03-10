@@ -1,4 +1,4 @@
-package me.a0xcaff.forte.ui.view
+package me.a0xcaff.forte.ui.queue
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,6 +14,7 @@ import me.a0xcaff.forte.databinding.FragmentQueueBinding
 import me.a0xcaff.forte.databinding.QueueItemBinding
 import me.a0xcaff.forte.graphql.SongQueueQuery
 import me.a0xcaff.forte.playback.*
+import me.a0xcaff.forte.ui.view.RecyclerViewListener
 import org.koin.android.ext.android.inject
 
 // TODO: Dismissing Currently Playing Item Crashes
