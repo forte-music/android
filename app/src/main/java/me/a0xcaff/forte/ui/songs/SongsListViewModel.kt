@@ -8,9 +8,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import me.a0xcaff.forte.playback.Backend
+import me.a0xcaff.forte.playback.ConnectionState
+import me.a0xcaff.forte.playback.PlaybackServiceConnection
+import me.a0xcaff.forte.playback.QueueItem
 
 class SongsListViewModel(
-    apolloClient: ApolloClient
+    private val backend: Backend,
+    apolloClient: ApolloClient,
+    private val connection: PlaybackServiceConnection
 ) : ViewModel() {
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
@@ -25,6 +31,12 @@ class SongsListViewModel(
                 .setInitialLoadSizeHint(1)
                 .build()
         )
+
+    fun addSong(id: String) {
+        val connectionState = connection.state.value!! as? ConnectionState.Connected ?: return
+        val queue = connectionState.binder.queue
+        queue.add(QueueItem(id, backend))
+    }
 
     @UseExperimental(ExperimentalCoroutinesApi::class)
     override fun onCleared() {

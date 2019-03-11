@@ -70,6 +70,10 @@ val Module = module {
     }
 
     viewModel {
-        SongsListViewModel(get())
+        SongsListViewModel(
+            backend = get(),
+            apolloClient = get(),
+            connection = get()
+        )
     }
 }

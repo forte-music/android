@@ -24,7 +24,7 @@ class SongsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = FragmentSongsBinding.inflate(inflater, container, false)
 
-        val listAdapter = SongsAdapter()
+        val listAdapter = SongsAdapter(viewModel::addSong)
         binding.songsList.apply {
             layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
             adapter = listAdapter
@@ -36,25 +36,14 @@ class SongsFragment : Fragment() {
     }
 }
 
-class SongsAdapter : PagedListAdapter<SongsListQuery.Node, SongsAdapter.ViewHolder>(DiffCallback()) {
+class SongsAdapter(
+    private val onAddSong: (id: String) -> Unit
+) : PagedListAdapter<SongsListQuery.Node, ViewHolder>(DiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
-        ViewHolder.create(LayoutInflater.from(parent.context), parent)
+        ViewHolder.create(LayoutInflater.from(parent.context), parent, onAddSong)
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(getItem(position))
-    }
-
-    class ViewHolder(val binding: QueueItemBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(data: SongsListQuery.Node?) {
-            binding.title.text = data?.name() ?: "Loading..."
-        }
-
-        companion object {
-            fun create(layoutInflater: LayoutInflater, root: ViewGroup): ViewHolder =
-                ViewHolder(
-                    QueueItemBinding.inflate(layoutInflater, root, false)
-                )
-        }
     }
 
     class DiffCallback : DiffUtil.ItemCallback<SongsListQuery.Node>() {
@@ -65,3 +54,27 @@ class SongsAdapter : PagedListAdapter<SongsListQuery.Node, SongsAdapter.ViewHold
             true
     }
 }
+
+class ViewHolder(
+    val onAddSong: (id: String) -> Unit,
+    val binding: QueueItemBinding
+) : RecyclerView.ViewHolder(binding.root) {
+    fun bind(data: SongsListQuery.Node?) {
+        binding.title.text = data?.name() ?: "Loading..."
+
+        binding.root.setOnClickListener {
+            data ?: return@setOnClickListener
+
+            onAddSong(data.id())
+        }
+    }
+
+    companion object {
+        fun create(layoutInflater: LayoutInflater, root: ViewGroup, onAddSong: (id: String) -> Unit): ViewHolder =
+            ViewHolder(
+                onAddSong,
+                QueueItemBinding.inflate(layoutInflater, root, false)
+            )
+    }
+}
+
