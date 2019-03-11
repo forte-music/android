@@ -10,6 +10,7 @@ import me.a0xcaff.forte.ServerValidator
 import me.a0xcaff.forte.ServerValidatorImpl
 import me.a0xcaff.forte.playback.PlaybackServiceConnection
 import me.a0xcaff.forte.ui.connect.ConnectActivityViewModel
+import me.a0xcaff.forte.ui.songs.SongsListViewModel
 import me.a0xcaff.forte.ui.view.BottomSheetViewModel
 import me.a0xcaff.forte.ui.view.PlaybackViewModel
 import okhttp3.HttpUrl
@@ -66,5 +67,9 @@ val Module = module {
 
     viewModel {
         PlaybackViewModel(get())
+    }
+
+    viewModel {
+        SongsListViewModel(get())
     }
 }

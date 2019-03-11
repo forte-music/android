@@ -1,0 +1,18 @@
+query SongsListQuery($pageSize: Int!, $after: String) {
+  songs(first: $pageSize, after: $after) {
+    pageInfo {
+      hasNextPage
+    }
+
+    count
+
+    edges {
+      cursor
+
+      node {
+        id
+        name
+      }
+    }
+  }
+}

@@ -61,6 +61,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-extensions:$lifecycleVersion")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation("androidx.recyclerview:recyclerview:1.0.0")
+    implementation("androidx.paging:paging-runtime-ktx:2.1.0")
 
     val navVersion = "1.0.0-alpha11"
     implementation("android.arch.navigation:navigation-fragment-ktx:$navVersion")
