@@ -17,6 +17,7 @@ class NavRootFragment : Fragment() {
 
         val navController = findNavController()
         binding.queue.setOnClickListener { navController.navigate(R.id.action_root_to_queue) }
+        binding.songs.setOnClickListener { navController.navigate(R.id.action_root_to_songs) }
 
         return binding.root
     }

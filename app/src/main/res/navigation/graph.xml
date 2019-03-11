@@ -11,10 +11,19 @@
         <action
             android:id="@+id/action_root_to_queue"
             app:destination="@id/queue" />
+        <action
+            android:id="@+id/action_root_to_songs"
+            app:destination="@id/songs" />
     </fragment>
 
     <fragment
         android:id="@+id/queue"
         android:name="me.a0xcaff.forte.ui.queue.QueueFragment"
         android:label="QueueFragment" />
+
+    <fragment
+        android:id="@+id/songs"
+        android:name="me.a0xcaff.forte.ui.songs.SongsFragment"
+        android:label="SongsFragment" />
+
 </navigation>
