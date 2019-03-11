@@ -70,13 +70,18 @@ val PlaybackServiceModule = module {
         val mediaSource = ConcatenatingMediaSource()
         val mediaSourceFactory = ExtractorMediaSource.Factory(get<OkHttpDataSourceFactory>())
         val queue = get<Queue>()
+        val player = get<SimpleExoPlayer>()
 
-        val updater = ConcatenatingMediaSourceUpdater(
+        ConcatenatingMediaSourceUpdater(
             mediaSource,
             mediaSourceFactory
-        )
+        ).let { updater -> queue.registerObserver(updater) }
 
-        queue.registerObserver(updater)
+        PlaybackPreparer(
+            queue,
+            player,
+            mediaSource
+        ).let { updater -> queue.registerObserver(updater) }
 
         mediaSource as MediaSource
     }
@@ -90,8 +95,6 @@ val PlaybackServiceModule = module {
 
     playbackScope {
         ExoPlayerFactory.newSimpleInstance(get<PlaybackService>()).apply {
-            prepare(get())
-
             val audioAttributes = get<AudioAttributes>()
             setAudioAttributes(audioAttributes, true)
         }

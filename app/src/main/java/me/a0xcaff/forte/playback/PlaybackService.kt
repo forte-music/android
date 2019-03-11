@@ -43,13 +43,11 @@ class PlaybackService : Service() {
 
         val queue = get<Queue>()
         val backend = get<Backend>()
-        val mediaSource = get<MediaSource>()
 
         queue.add(
             QueueItem("00000000000000000000000000000001", backend),
             QueueItem("00000000000000000000000000000002", backend)
         )
-        player.prepare(mediaSource)
     }
 
     @UseExperimental(ExperimentalCoroutinesApi::class)

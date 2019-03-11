@@ -18,26 +18,26 @@ interface ObservableList<T> {
         /**
          * See [RecyclerView.Adapter.notifyItemMoved]
          */
-        fun onItemMoved(fromPosition: Int, toPosition: Int)
+        fun onItemMoved(fromPosition: Int, toPosition: Int) {}
 
         /**
          * See [RecyclerView.Adapter.notifyItemRemoved]
          */
-        fun onItemRemoved(idx: Int)
+        fun onItemRemoved(idx: Int) {}
 
         /**
          * See [RecyclerView.Adapter.notifyItemRangeInserted]
          *
          * @param items Items which were inserted.
          */
-        fun onItemRangeInserted(positionStart: Int, items: List<T>)
+        fun onItemRangeInserted(positionStart: Int, items: List<T>) {}
 
         /**
          * See [RecyclerView.Adapter.notifyItemRangeChanged]
          *
          * @param items All items after [positionStart]
          */
-        fun onItemRangeChanged(positionStart: Int, items: List<T>)
+        fun onItemRangeChanged(positionStart: Int, items: List<T>) {}
     }
 }
 
