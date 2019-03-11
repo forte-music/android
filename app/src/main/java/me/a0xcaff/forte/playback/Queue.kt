@@ -69,7 +69,7 @@ abstract class BaseObservableList<T> : ObservableList<T> {
 
 interface MutableObservableList<T> : ObservableList<T> {
     fun add(vararg items: T) {
-        insert(Math.max(0, this.items.lastIndex), *items)
+        insert(this.items.size, *items)
     }
 
     fun remove(idx: Int): T
